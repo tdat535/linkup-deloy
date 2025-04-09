@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Search, MessageSquare, Bell, User, MoreHorizontal, Sun, Moon, Plus, Settings } from "lucide-react";
 import { motion } from "framer-motion";
-import PostButton from "Components/Buttons/PostButton";
+import PostButton from "../../Buttons/PostButton";
 import PostModal from "../Modal/PostModal";
 import { useTheme } from "../../../context/ThemeContext"; // Import useTheme
 import React from "react";

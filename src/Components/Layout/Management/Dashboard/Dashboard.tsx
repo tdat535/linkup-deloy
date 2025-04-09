@@ -21,7 +21,7 @@ import {
   Legend,
   LabelList,
 } from "recharts";
-import DashboardCard from "Components/DashboardCard/DashboardCard";
+import DashboardCard from "../../../DashboardCard/DashboardCard";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import logoImage from "./Nội dung đoạn văn bản của bạn.jpg"; // Giả sử bạn có file logo tại đây
