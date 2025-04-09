@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
-import axiosInstance from "Components/TokenRefresher";
+import axiosInstance from "../../Components/TokenRefresher";
 
 const Login = () => {
   const [email, setEmail] = useState<string>("");
