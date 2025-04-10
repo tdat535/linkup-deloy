@@ -7,7 +7,7 @@ import {
 import { useTheme } from "../../../context/ThemeContext";
 import CommentModal from "../Modal/CommentModal";
 import { PostProps } from "./PostProps";
-import axiosInstance from "Components/TokenRefresher";
+import axiosInstance from "../../TokenRefresher";
 
 const PostItem: React.FC<{ post: PostProps }> = ({ post }) => {
   const { theme } = useTheme();
