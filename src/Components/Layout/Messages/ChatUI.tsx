@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Send } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import axios from "axios";
-import { connectSocket, disconnectSocket, getSocket } from "../../socket";
 import { Messenger } from "./Messenger";
 import { MessengerDetail } from "./MessengerDetail";
 import { User } from "./User";
+import { useSocket } from "../../../context/SocketContext";
+import axiosInstance from "Components/TokenRefresher";
 
 const ChatPage = ({ theme }: { theme: string }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -14,9 +15,11 @@ const ChatPage = ({ theme }: { theme: string }) => {
   const [input, setInput] = useState("");
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const currentUserId = Number(localStorage.getItem("currentUserId"));
+
+  const socket = useSocket();
+
   useEffect(() => {
-    if (!currentUserId) return;
-    const socket = connectSocket();
+    if (!socket || !currentUserId) return;
 
     socket.emit("userOnline", currentUserId);
 
@@ -31,9 +34,8 @@ const ChatPage = ({ theme }: { theme: string }) => {
     return () => {
       socket.off("receiveMessage");
       socket.off("notification");
-      disconnectSocket();
     };
-  }, [currentUserId]);
+  }, [socket, currentUserId]);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -59,7 +61,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
 
   const loadConversation = async (userId: string) => {
     try {
-      const res = await axios.get(
+      const res = await axiosInstance.get(
         "https://api-linkup.id.vn/api/texting/getMessengerDetail",
         {
           headers: {
@@ -91,23 +93,23 @@ const ChatPage = ({ theme }: { theme: string }) => {
   };
 
   const sendMessage = () => {
-    if (!input.trim() || !otherUser) return;
+    if (!input.trim() || !otherUser || !socket) {
+      console.log("⛔ Không thể gửi tin nhắn. Thiếu dữ liệu hoặc socket chưa sẵn sàng");
+      return;
+    }
+  
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-
+  
     const message = {
       senderId: currentUserId,
       receiverId: otherUser.id,
       content: input.trim(),
       image: null,
     };
-
-    try {
-      const socket = getSocket();
-      socket.emit("sendMessage", message);
-    } catch (err) {
-      console.error("Socket chưa được kết nối:", err);
-    }
-
+  
+    console.log("📤 Gửi tin nhắn qua socket:", message);
+    socket.emit("sendMessage", message);
+  
     setMessages((prev) => [
       ...prev,
       {
@@ -126,9 +128,10 @@ const ChatPage = ({ theme }: { theme: string }) => {
         },
       },
     ]);
-
+  
     setInput("");
   };
+  
   
   return (
     <div className="flex h-screen">
