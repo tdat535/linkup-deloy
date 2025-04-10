@@ -1,21 +1,21 @@
 import 'flowbite';
 import { useNavigate } from 'react-router-dom';
-import React, { useState } from 'react';
-import { Sun,Moon } from "lucide-react";
+import { useState } from 'react';
+import { Sun, Moon } from 'lucide-react';
 
 const Register = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        username: '',  
+        username: '',
         email: '',
-        phonenumber: '', 
+        phonenumber: '',
         password: '',
         confirmPassword: '',
     });
-    
+
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isSun, setIsSun] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,27 +24,27 @@ const Register = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-    
+
         if (!formData.username || !formData.email || !formData.phonenumber || !formData.password) {
             setError('Vui lòng điền đầy đủ thông tin.');
             return;
         }
-    
+
         if (formData.password !== formData.confirmPassword) {
             setError('Mật khẩu nhập lại không khớp.');
             return;
         }
-    
+
         setLoading(true);
-    
+
         try {
             console.log("Dữ liệu gửi lên API:", JSON.stringify({
                 username: formData.username,
                 email: formData.email,
-                phone: formData.phonenumber,
+                phonenumber: formData.phonenumber,
                 password: formData.password,
             }));
-    
+
             const response = await fetch('https://api-linkup.id.vn/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -52,14 +52,13 @@ const Register = () => {
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,
-                    phonenumber: formData.phonenumber,  
+                    phonenumber: formData.phonenumber,
                 }),
             });
-            
-    
+
             const result = await response.json();
             console.log("Phản hồi API:", response);
-    
+
             if (response.ok) {
                 alert('Đăng ký thành công! Chuyển đến trang đăng nhập.');
                 navigate('/login');
@@ -73,55 +72,92 @@ const Register = () => {
             setLoading(false);
         }
     };
-    
+
     return (
-        <div className="flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundColor: '#1C1C1D'}}>
-            <div className="flex-col md:flex-row w-full bg-opacity-50 p-5">
-            <div className='text-7xl text-center break-words text-white'><span className='text-transparent bg-clip-text bg-gradient-to-r to-emerald-300 from-sky-400 '>𝓛𝓲𝓷𝓴𝓤𝓹</span></div>
-                <div className="flex justify-center items-center w-full mt-10">
-                    <form onSubmit={handleSubmit} className={`max-w-sm mx-auto p-6 border rounded-2xl border-stone-800 w-full bg-opacity-75 ${isSun ? 'shadow-[3px_3px_0px_rgba(100,100,100,0.3)] bg-black' : 'shadow-[3px_3px_0px_rgba(10,10,10,0.5)] bg-white'}`} style={{ maxWidth: '32rem', height: '43rem' }}>
-                        <div className='flex relative'>
-                            <p className={`text-center font-bold block mb-2 text-2xl ${isSun ? 'text-white' : 'text-black'}`}>Đăng kí</p>
-                            <button type='reset'className={`p-1.5 rounded-xl  backdrop-blur-md hover:backdrop-blur-lg absolute right-0 transition-all ${isSun 
-                                ? 'bg-[#f9d134] text-black shadow-[0px_0px_30px_5px_rgba(255,255,255,0.5)] hover:shadow-[0px_0px_5px_3px_rgba(255,255,255,0.5)] duration-1000' 
-                                : 'bg-[#757271] text-blue-700 duration-1000'}`}  onClick={() => setIsSun(!isSun)}>
-                                    {isSun ? <Sun/> : <Moon/>}
-                            </button>
-                        </div>
-                        {<p className='text-red-500 text-sm mb-3'>{error || "ㅤ"}</p>}
-                        <div className="mb-3">
-                            <label className={`block mb-2 text-sm font-medium ${isSun ? 'text-white' : 'text-black'}`}>Tên tài khoản</label>
-                            <input type="text" name="username" className={`text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#e8f0fe] ${isSun ? 'bg-black border border-white text-white placeholder-gray-700' : 'bg-white border border-black text-black placeholder-gray-300'}`} value={formData.username} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className={`block mb-2 text-sm font-medium ${isSun ? 'text-white' : 'text-black'}`}>Số điện thoại</label>
-                            <input type="text" name="phonenumber" className={`text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#e8f0fe] ${isSun ? 'bg-black border border-white text-white placeholder-gray-700' : 'bg-white border border-black text-black placeholder-gray-300'}`} value={formData.phonenumber} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className={`block mb-2 text-sm font-medium ${isSun ? 'text-white' : 'text-black'}`}>Email</label>
-                            <input type="email" name="email" className={`text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#e8f0fe] ${isSun ? 'bg-black border border-white text-white placeholder-gray-700' : 'bg-white border border-black text-black placeholder-gray-300'}`} value={formData.email} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className={`block mb-2 text-sm font-medium ${isSun ? 'text-white' : 'text-black'}`}>Mật khẩu</label>
-                            <input type="password" name="password" className={`text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#e8f0fe] ${isSun ? 'bg-black border border-white text-white placeholder-gray-700' : 'bg-white border border-black text-black placeholder-gray-300'}`} value={formData.password} onChange={handleChange} required />
-                        </div>
-                        <div className="mb-3">
-                            <label className={`block mb-2 text-sm font-medium ${isSun ? 'text-white' : 'text-black'}`}>Nhập lại mật khẩu</label>
-                            <input type="password" name="confirmPassword" className={`text-sm rounded-lg block w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#e8f0fe] ${isSun ? 'bg-black border border-white text-white placeholder-gray-700' : 'bg-white border border-black text-black placeholder-gray-300'}`} value={formData.confirmPassword} onChange={handleChange} required />
-                        </div>
-                        
-                        <button type="submit" className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" disabled={loading} onKeyDown={(e) => e.key === "Enter" && Register}>
-                            {loading ? 'Đang đăng ký...' : 'Đăng ký'}
+        <div
+            className={`flex flex-col md:flex-row items-center justify-center h-screen w-screen overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'
+                }`}
+        >
+            {/* Logo chỉ hiển thị trên điện thoại */}
+            <div className="md:hidden text-center w-full py-2.5 bg-blue-500 text-white text-2xl font-bold">
+                <span className='text-transparent text-2xl bg-clip-text bg-gradient-to-t to-emerald-300 via-sky-300 from-sky-400'>𝓛𝓲𝓷𝓴𝓤𝓹</span> - Kết nối bạn bè
+            </div>
+
+            {/* Container chính */}
+            <div className="w-full max-w-5xl md:flex bg-white dark:bg-gray-800 shadow-lg overflow-hidden h-full md:h-auto">
+
+                {/* Cột trái - Giới thiệu mạng xã hội (Ẩn trên mobile) */}
+                <div className="hidden md:flex flex-col justify-center items-center w-1/2 p-10 bg-blue-500 text-white">
+                    <div className='text-7xl text-center break-words text-white'>
+                        <span className='text-transparent bg-clip-text bg-gradient-to-t to-emerald-300 via-sky-300 from-sky-400 drop-shadow-lg'>𝓛𝓲𝓷𝓴𝓤𝓹</span>
+                    </div>
+                    <p className="text-lg mt-3">Tham gia cộng đồng của chúng tôi ngay hôm nay để chia sẻ và kết nối.</p>
+                </div>
+
+                {/* Cột phải - Form đăng ký */}
+                <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
+
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Đăng ký</h1>
+                        <button
+                            className="p-3 rounded-xl bg-yellow-400 dark:bg-gray-700 text-gray-900 dark:text-white shadow-md hover:shadow-lg transition-all"
+                            onClick={() => setIsDarkMode(!isDarkMode)}
+                        >
+                            {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+                        </button>
+                    </div>
+
+                    {/* Thông báo lỗi */}
+                    {error && <p className="text-red-500 text-sm mb-3 text-center bg-red-100 dark:bg-red-700 p-2 rounded-lg">{error}</p>}
+
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="grid gap-4">
+                        <InputField label="Tên tài khoản" name="username" value={formData.username} onChange={handleChange} />
+                        <InputField label="Số điện thoại" name="phonenumber" value={formData.phonenumber} onChange={handleChange} />
+                        <InputField label="Email" type="email" name="email" value={formData.email} onChange={handleChange} />
+                        <InputField label="Mật khẩu" type="password" name="password" value={formData.password} onChange={handleChange} />
+                        <InputField label="Nhập lại mật khẩu" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-semibold 
+                            transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={loading}
+                        >
+                            {loading ? '⏳ Đang đăng ký...' : 'Đăng ký ngay'}
                         </button>
 
-                        <div className="flex items-center justify-center mt-10">
-                            <button onClick={() => navigate('/login')} className="btn-back text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center ">
-                                Quay lại trang đăng nhập
-                            </button>
-                        </div>
+                        {/* Back to Login */}
+                        <button
+                            type="button"
+                            className="w-full mt-2 text-center text-blue-600 dark:text-blue-300 hover:underline transition-all"
+                            onClick={() => navigate('/login')}
+                        >
+                            ⬅️ Đã có tài khoản? Đăng nhập ngay
+                        </button>
                     </form>
                 </div>
             </div>
+        </div>
+    );
+};
+
+/* Component InputField */
+const InputField = ({ label, name, type = 'text', value, onChange }: any) => {
+    return (
+        <div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white">{label}</label>
+            <input
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                required
+                className="w-full p-3 mt-1 outline-none border border-blue-500 rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400 
+                dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all"
+            />
         </div>
     );
 };

@@ -1,14 +1,36 @@
 import React, { useEffect, useState } from "react";
-import Modal from "./Modal";
-import TextareaAutosize from "react-textarea-autosize";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  Avatar,
+  IconButton,
+  Divider,
+  useTheme as useMuiTheme,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  useMediaQuery,
+  Stack,
+  Tooltip
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import ImageIcon from "@mui/icons-material/Image";
+import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useTheme } from "../../../context/ThemeContext";
-import PostButton from "../../Buttons/PostButton";
 import axiosInstance from "../../TokenRefresher";
 
 interface PostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  refreshPosts: () => void; // thêm prop này
+  refreshPosts: () => void;
 }
 
 const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) => {
@@ -28,10 +50,12 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
 
   const [content, setContent] = useState("");
   const { theme } = useTheme();
+  const muiTheme = useMuiTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down("sm"));
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null); // Preview video
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
-  const [video, setVideo] = useState<File | null>(null); // Video file
+  const [video, setVideo] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const url = "https://api-linkup.id.vn/api/media/createMedia";
 
@@ -44,11 +68,11 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const fileType = file.type.split("/")[0]; // Lấy loại file (image hoặc video)
+    const fileType = file.type.split("/")[0];
 
     if (fileType === "image") {
       setImage(file);
-      setVideo(null); // Xóa video nếu đã chọn ảnh
+      setVideo(null);
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -58,7 +82,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
       reader.readAsDataURL(file);
     } else if (fileType === "video") {
       setVideo(file);
-      setImage(null); // Xóa ảnh nếu đã chọn video
+      setImage(null);
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -123,7 +147,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
         setImagePreview(null);
         setVideoPreview(null);
         onClose();
-        refreshPosts(); // ⬅️ Gọi hàm cập nhật bài viết
+        refreshPosts();
       }
     } catch (error) {
       console.error("Lỗi khi đăng bài:", error);
@@ -132,111 +156,246 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
     setIsLoading(false);
   };
 
+  const getCharCount = () => {
+    return `${content.length}/250`;
+  };
+
   return (
-    <Modal
-      isOpen={isOpen}
+    <Dialog
+      open={isOpen}
       onClose={onClose}
-      title="Tạo bài viết mới"
-      content={
-        <div>
-          <div className="flex items-center">
-            <img
-              src="https://media.tenor.com/9vTAoKqOXPQAAAAM/shrek-shrek-meme.gif"
-              alt="Avatar"
-              className="w-10 h-10 rounded-full mr-3 object-cover"
-            />
-            <span
-              className={`font-semibold ${
-                theme === "dark" ? "text-white" : "text-black"
-              }`}
-            >
-              {user?.username}
-            </span>
-          </div>
-          <div className="mt-2">
-            <TextareaAutosize
-              minRows={1}
-              className={`rounded-lg p-2 w-full outline-none ${
-                theme === "dark"
-                  ? "bg-[#333334] text-white placeholder-gray-400"
-                  : "bg-[#f0f2f5] text-black placeholder-gray-500"
-              }`}
-              placeholder="Bạn đang nghĩ gì?"
-              value={content}
-              onChange={handleChange}
-              style={{ resize: "none" }}
-            />
-          </div>
-          <div className="mt-3 flex items-center">
-            <label
-              className={`block mb-2 ${
-                theme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Đính kèm ảnh hoặc video?
-            </label>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-              className="hidden"
-              id="mediaUpload"
-            />
-            <label
-              htmlFor="mediaUpload"
-              className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 ms-auto"
-            >
-              Chọn tệp
-            </label>
-          </div>
+      fullWidth
+      maxWidth="sm"
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 2,
+          bgcolor: theme === "dark" ? "#1e1e1e" : "#ffffff",
+          color: theme === "dark" ? "#ffffff" : "#000000",
+        },
+      }}
+    >
+      <DialogTitle sx={{ 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center",
+        borderBottom: 1, 
+        borderColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)" 
+      }}>
+        <Typography variant="h6" component="div" fontWeight="bold">
+          Tạo bài viết mới
+        </Typography>
+        <IconButton 
+          edge="end" 
+          color="inherit" 
+          onClick={onClose} 
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
-          {imagePreview && (
-            <div className="mt-3 relative rounded border border-[#626466] p-2">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-full max-h-64 object-cover rounded-lg shadow-md"
-              />
-              <button
-                onClick={handleRemoveImage}
-                className="absolute top-0 right-0 bg-red-600 text-white p-2 py-1 text-sm rounded-full hover:bg-red-700"
-              >
-                X
-              </button>
-            </div>
-          )}
-
-          {videoPreview && (
-            <div className="mt-3 relative rounded border border-[#626466] p-2">
-              <video
-                controls
-                className="w-full max-h-64 object-cover rounded-lg shadow-md"
-              >
-                <source src={videoPreview} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <button
-                onClick={handleRemoveVideo}
-                className="absolute top-0 right-0 bg-red-600 text-white p-2 py-1 text-sm rounded-full hover:bg-red-700"
-              >
-                X
-              </button>
-            </div>
-          )}
-        </div>
-      }
-      footer={
-        <div className="flex justify-end space-x-2">
-          <PostButton
-            text={isLoading ? "Đang đăng..." : "Đăng bài"}
-            onClick={handleConfirm}
-            variant="primary"
-            fullWidth
-            disabled={isLoading}
+      <DialogContent sx={{ pt: 3 }}>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Avatar 
+            src="https://via.placeholder.com/80" 
+            alt={user?.username || "User"} 
+            sx={{ 
+              width: 48, 
+              height: 48, 
+              mr: 2, 
+              mt: 1 // Added margin-top
+            }} 
           />
-        </div>
-      }
-    />
+          <Typography 
+            variant="subtitle1" 
+            fontWeight="medium"
+            sx={{
+              color: theme === "dark" ? "#ffffff" : "#000000",
+            }}
+          >
+            {user?.username || "User"}
+          </Typography>
+        </Box>
+
+        <TextField
+          fullWidth
+          multiline
+          minRows={3}
+          maxRows={10}
+          placeholder="Bạn đang nghĩ gì?"
+          value={content}
+          onChange={handleChange}
+          variant="outlined"
+          InputProps={{
+            sx: {
+              bgcolor: theme === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+              "& fieldset": {
+                borderColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)",
+              },
+            }
+          }}
+          sx={{ mb: 2 }}
+        />
+
+        <Box display="flex" justifyContent="flex-end" mb={1}>
+          <Typography variant="caption" color="text.secondary">
+            {getCharCount()}
+          </Typography>
+        </Box>
+
+        {(imagePreview || videoPreview) && (
+          <Paper 
+            variant="outlined" 
+            sx={{ 
+              position: "relative",
+              p: 1,
+              mb: 2,
+              bgcolor: theme === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+              borderColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)",
+              borderRadius: 2
+            }}
+          >
+            {imagePreview && (
+              <Box sx={{ position: "relative" }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{ 
+                    width: "100%", 
+                    maxHeight: "300px", 
+                    objectFit: "contain", 
+                    borderRadius: "8px"
+                  }}
+                />
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    bgcolor: "rgba(0, 0, 0, 0.5)",
+                    color: "#fff",
+                    "&:hover": { bgcolor: "rgba(0, 0, 0, 0.7)" },
+                  }}
+                  size="small"
+                  onClick={handleRemoveImage}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            )}
+
+            {videoPreview && (
+              <Box sx={{ position: "relative" }}>
+                <video
+                  controls
+                  style={{ 
+                    width: "100%", 
+                    maxHeight: "300px", 
+                    borderRadius: "8px" 
+                  }}
+                >
+                  <source src={videoPreview} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    bgcolor: "rgba(0, 0, 0, 0.5)",
+                    color: "#fff",
+                    "&:hover": { bgcolor: "rgba(0, 0, 0, 0.7)" },
+                  }}
+                  size="small"
+                  onClick={handleRemoveVideo}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            )}
+          </Paper>
+        )}
+
+        <Divider sx={{ my: 2 }} />
+
+        <input
+          type="file"
+          accept="image/*,video/*"
+          onChange={handleFileChange}
+          id="mediaUpload"
+          style={{ display: "none" }}
+        />
+        
+        <Stack 
+          direction="row" 
+          spacing={2} 
+          justifyContent="space-between" 
+          alignItems="center"
+          sx={{ mb: 1 }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Thêm vào bài viết
+          </Typography>
+          
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Thêm ảnh">
+              <label htmlFor="mediaUpload">
+                <Button
+                  component="span"
+                  startIcon={<ImageIcon />}
+                  sx={{ 
+                    color: theme === "dark" ? "#4CAF50" : "#2E7D32",
+                    "&:hover": { bgcolor: theme === "dark" ? "rgba(76, 175, 80, 0.1)" : "rgba(46, 125, 50, 0.1)" }
+                  }}
+                >
+                  Ảnh
+                </Button>
+              </label>
+            </Tooltip>
+            
+            <Tooltip title="Thêm video">
+              <label htmlFor="mediaUpload">
+                <Button
+                  component="span"
+                  startIcon={<VideoLibraryIcon />}
+                  sx={{ 
+                    color: theme === "dark" ? "#2196F3" : "#0D47A1",
+                    "&:hover": { bgcolor: theme === "dark" ? "rgba(33, 150, 243, 0.1)" : "rgba(13, 71, 161, 0.1)" }
+                  }}
+                >
+                  Video
+                </Button>
+              </label>
+            </Tooltip>
+          </Stack>
+        </Stack>
+      </DialogContent>
+
+      <DialogActions sx={{ 
+        px: 3, 
+        pb: 3, 
+        justifyContent: "flex-end",
+        borderTop: 1,
+        borderColor: theme === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)"
+      }}>
+        <Button
+          variant="contained"
+          fullWidth
+          disabled={isLoading || content.trim() === ""}
+          onClick={handleConfirm}
+          sx={{
+            bgcolor: "#1976d2",
+            "&:hover": { bgcolor: "#1565c0" },
+            py: 1,
+            borderRadius: 2,
+            textTransform: "none",
+          }}
+        >
+          {isLoading ? "Đang đăng..." : "Đăng bài viết"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

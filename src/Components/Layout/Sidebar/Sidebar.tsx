@@ -1,68 +1,275 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Home, Search, MessageSquare, Bell, User, MoreHorizontal, Sun, Moon, Plus, Settings } from "lucide-react";
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { 
+  Box, 
+  List, 
+  ListItem, 
+  ListItemIcon, 
+  ListItemText, 
+  Typography, 
+  Button, 
+  IconButton, 
+  Drawer, 
+  useTheme, 
+  alpha, 
+  Paper, 
+  Menu, 
+  MenuItem,
+  Divider
+} from "@mui/material";
+import { 
+  Home, 
+  Search, 
+  MessageSquare, 
+  Bell, 
+  User, 
+  MoreHorizontal, 
+  Sun, 
+  Moon, 
+  Plus, 
+  Settings 
+} from "lucide-react";
 import { motion } from "framer-motion";
-import PostButton from "../../Buttons/PostButton";
 import PostModal from "../Modal/PostModal";
-import { useTheme } from "../../../context/ThemeContext"; // Import useTheme
-import React from "react";
+import { useTheme as useAppTheme } from "../../../context/ThemeContext";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme(); // Lấy theme và toggleTheme từ context
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const { theme: appTheme, toggleTheme } = useAppTheme();
   const [isBottomNavVisible] = useState(true);
   const currentUserId = localStorage.getItem("currentUserId") || "default-id";
   const profileUrl = currentUserId !== "default-id" ? `/home/profile?userId=${currentUserId}` : "/login";
+  
+  // MUI theme
+  const muiTheme = useTheme();
+  const location = useLocation();
+
+  // Menu items configuration
+  const menuItems = [
+    { path: "/home", icon: <Home />, text: "Trang chủ" },
+    { path: "/home/search", icon: <Search />, text: "Khám phá" },
+    { path: "/home/messages", icon: <MessageSquare />, text: "Tin nhắn" },
+    { path: "/home/notifications", icon: <Bell />, text: "Thông báo" },
+    { path: profileUrl, icon: <User />, text: "Trang cá nhân" },
+    { path: "/admin", icon: <Settings />, text: "Đến trang admin" }
+  ];
+
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setMenuAnchorEl(null);
+  };
+
+  // Check if a menu item is active
+  const isActive = (path: string) => {
+    return location.pathname === path || 
+           (path !== "/home" && location.pathname.startsWith(path));
+  };
+
+  // Colors for active and hover states
+  const isDarkMode = appTheme === "dark";
+  const activeBackgroundColor = isDarkMode 
+    ? alpha(muiTheme.palette.primary.main, 0.2) 
+    : alpha(muiTheme.palette.primary.main, 0.1);
+  const hoverBackgroundColor = isDarkMode 
+    ? alpha(muiTheme.palette.primary.main, 0.1) 
+    : alpha(muiTheme.palette.primary.main, 0.05);
+  const activeTextColor = muiTheme.palette.primary.main;
+  const normalTextColor = isDarkMode ? '#fff' : '#000';
+
   return (
     <>
-      <div className={`fixed top-0 left-0 h-screen w-64 border-r border-gray-300 text-xl p-4 z-50 hidden md:flex flex-col transition-all duration-300 ${theme === "dark" ? "bg-[#1C1C1D] text-white" : "bg-[#f0f2f5] text-black"}`}>
-        <h1 className="text-3xl font-bold mb-12">𝓛𝓲𝓷𝓴𝓤𝓹</h1>
+      {/* Desktop Sidebar */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            width: 280,
+            boxSizing: 'border-box',
+            border: 'none',
+            borderRight: 1,
+            borderColor: isDarkMode ? 'grey.800' : 'grey.200',
+            backgroundColor: isDarkMode ? '#1C1C1D' : '#f0f2f5',
+            color: isDarkMode ? '#fff' : '#000',
+            overflow: 'hidden'
+          },
+        }}
+        open
+      >
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h4" fontWeight="bold" sx={{ mb: 4, fontFamily: 'cursive', color: isDarkMode ? '#fff' : '#000' }}>
+            𝓛𝓲𝓷𝓴𝓤𝓹
+          </Typography>
 
-        <nav className="flex-1 space-y-7">
-          <Link to="/home" className="flex items-center gap-4"><Home /> Trang chủ</Link>
-          <Link to="/home/search" className="flex items-center gap-4"><Search /> Khám phá</Link>
-          <Link to="/home/messages" className="flex items-center gap-4"><MessageSquare /> Tin nhắn</Link>
-          <Link to="/home/notifications" className="flex items-center gap-4"><Bell /> Thông báo</Link>
-          <Link to={profileUrl} className="flex items-center gap-4"><User /> Trang cá nhân</Link>
-          <div className="relative">
-            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-4">
-              <MoreHorizontal /> Thêm
-            </button>
-            {isDropdownOpen && (
-              <div className={`absolute left-0 top-full mt-2 w-48 rounded-lg z-50 ${theme === "dark" ? "bg-neutral-800 text-white" : "bg-neutral-200 text-black"}`}>
-                <ul className="py-2">
-                  <li>
-                    <button onClick={toggleTheme} className={`flex items-center w-full px-4 py-2 text-sm  ${theme === "dark" ? "text-white hover:bg-neutral-700" : "text-black hover:bg-neutral-300"}`}>
-                      {theme === "light" ? <Sun size={18} /> : <Moon size={18} />}
-                      <span className="ml-2">{theme === "light" ? "Chế độ sáng" : "Chế độ tối"}</span>
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-          <Link to="/admin" className="flex items-center gap-4"><Settings />Đến trang admin</Link>
-          <div className={`transition-all duration-300 ${isDropdownOpen ? "mt-16" : "mt-4"}`}>
-            <PostButton text="Đăng" onClick={() => setIsOpen(true)} variant="primary" size="lg" fullWidth />
-          </div>
-        </nav>
-      </div>
-      <motion.div
+          <List sx={{ width: '100%' }}>
+            {menuItems.map((item) => (
+              <ListItem
+                key={item.path}
+                component={Link}
+                to={item.path}
+                disablePadding
+                sx={{
+                  mb: 1,
+                  borderRadius: 2,
+                  backgroundColor: isActive(item.path) ? activeBackgroundColor : 'transparent',
+                  '&:hover': {
+                    backgroundColor: hoverBackgroundColor,
+                    transition: 'background-color 0.3s ease'
+                  },
+                  transition: 'all 0.2s ease',
+                  textDecoration: 'none'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', py: 1.5, px: 2, width: '100%' }}>
+                  <ListItemIcon 
+                    sx={{ 
+                      minWidth: 40, 
+                      color: isActive(item.path) ? activeTextColor : normalTextColor
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    primaryTypographyProps={{ 
+                      fontSize: '1rem',
+                      fontWeight: isActive(item.path) ? 'bold' : 'normal',
+                      color: isActive(item.path) ? activeTextColor : 'inherit'
+                    }} 
+                  />
+                </Box>
+              </ListItem>
+            ))}
+
+            <ListItem
+              disablePadding
+              sx={{
+                mb: 1,
+                borderRadius: 2,
+                '&:hover': {
+                  backgroundColor: hoverBackgroundColor,
+                  transition: 'background-color 0.3s ease'
+                },
+              }}
+            >
+              <Box 
+                sx={{ display: 'flex', alignItems: 'center', py: 1.5, px: 2, width: '100%', cursor: 'pointer' }}
+                onClick={handleOpenMenu}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: normalTextColor }}>
+                  <MoreHorizontal />
+                </ListItemIcon>
+                <ListItemText primary="Thêm" />
+              </Box>
+            </ListItem>
+          </List>
+
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={handleCloseMenu}
+            transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+            PaperProps={{
+              sx: {
+                mt: 1.5,
+                backgroundColor: isDarkMode ? 'neutral.800' : 'neutral.100',
+                boxShadow: 3,
+                borderRadius: 2,
+                minWidth: 180
+              }
+            }}
+          >
+            <MenuItem onClick={() => { toggleTheme(); handleCloseMenu(); }}>
+              <ListItemIcon>
+                {isDarkMode ? <Sun fontSize="small" /> : <Moon fontSize="small" />}
+              </ListItemIcon>
+              <ListItemText primary={isDarkMode ? "Chế độ sáng" : "Chế độ tối"} />
+            </MenuItem>
+          </Menu>
+
+          <Box sx={{ mt: 4 }}>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={<Plus size={16} />}
+              onClick={() => setIsOpen(true)}
+              sx={{
+                py: 1.5,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Đăng
+            </Button>
+          </Box>
+        </Box>
+      </Drawer>
+
+      {/* Mobile Bottom Navigation */}
+      <Paper
+        component={motion.div}
         initial={{ y: 0 }}
         animate={{ y: isBottomNavVisible ? 0 : 100 }}
         transition={{ duration: 0.3 }}
-        className={`fixed bottom-0 left-0 w-full border-t border-gray-600 md:hidden flex items-center justify-around z-50 ${theme === "dark" ? "bg-[#1C1C1D] text-white" : "bg-white text-black"}`}
+        elevation={3}
+        sx={{
+          display: { xs: 'flex', md: 'none' },
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          borderTop: 1,
+          borderColor: isDarkMode ? 'grey.800' : 'grey.200',
+          backgroundColor: isDarkMode ? '#1C1C1D' : '#fff',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          py: 0.5
+        }}
       >
-        <Link to="/home" className="p-3"><Home /></Link>
-        <Link to="/home/search" className="p-3"><Search /></Link>
-        <Link to="/home/messages" className="p-3"><MessageSquare /></Link>
-        <Link to="/home/notifications" className="p-3"><Bell /></Link>
-        <Link to="/home/profile" className="p-3"><User /></Link>
-        <button onClick={() => setIsOpen(true)} className="bg-blue-500 p-2 text-white rounded-full shadow-lg">
-          <Plus size={24} />
-        </button>
-      </motion.div>
+        {menuItems.slice(0, 5).map((item) => (
+          <IconButton
+            key={item.path}
+            component={Link}
+            to={item.path}
+            sx={{
+              color: isActive(item.path) ? activeTextColor : (isDarkMode ? 'grey.400' : 'grey.600'),
+              p: 1.5,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {item.icon}
+          </IconButton>
+        ))}
+        <IconButton
+          color="primary"
+          onClick={() => setIsOpen(true)}
+          sx={{
+            p: 1,
+            backgroundColor: 'primary.main',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+            },
+            boxShadow: 2,
+            borderRadius: '50%'
+          }}
+        >
+          <Plus size={22} />
+        </IconButton>
+      </Paper>
+
+      {/* Post Modal */}
+      {isOpen && <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} refreshPosts={function (): void {
+        throw new Error("Function not implemented.");
+      } } />}
     </>
   );
 };
