@@ -6,7 +6,7 @@ import { Messenger } from "./Messenger";
 import { MessengerDetail } from "./MessengerDetail";
 import { User } from "./User";
 import { useSocket } from "../../../context/SocketContext";
-import axiosInstance from "Components/TokenRefresher";
+import axiosInstance from "../../TokenRefresher";
 
 const ChatPage = ({ theme }: { theme: string }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);

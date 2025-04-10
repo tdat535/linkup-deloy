@@ -4,7 +4,7 @@ import type { TabsOptions, TabItem } from "flowbite";
 import { useTheme } from "../../../context/ThemeContext";
 import React from "react";
 import { useSocket } from "../../../context/SocketContext";
-import axiosInstance from "Components/TokenRefresher";
+import axiosInstance from "../../TokenRefresher";
 
 export default function Notification() {
     const [notifications, setNotifications] = useState<any[]>([]);
