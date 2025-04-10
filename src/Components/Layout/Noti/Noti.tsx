@@ -7,115 +7,155 @@ import { useSocket } from "../../../context/SocketContext";
 import axiosInstance from "../../TokenRefresher";
 
 export default function Notification() {
-    const [notifications, setNotifications] = useState<any[]>([]);
-    const [followedUsers, setFollowedUsers] = useState<number[]>([]);
-    const { theme } = useTheme();
-    const socket = useSocket();
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [followedUsers, setFollowedUsers] = useState<number[]>([]);
+  const { theme } = useTheme();
+  const socket = useSocket();
 
-    // Tabs
-    useEffect(() => {
-        const tabsElement = document.getElementById("default-tab");
-        if (tabsElement) {
-            const tabElements: TabItem[] = [
-                {
-                    id: "today",
-                    triggerEl: document.getElementById("Today-tab")!,
-                    targetEl: document.getElementById("today")!,
-                },
-                {
-                    id: "all",
-                    triggerEl: document.getElementById("All-tab")!,
-                    targetEl: document.getElementById("all")!,
-                },
-            ];
+  // Tabs
+  useEffect(() => {
+    const tabsElement = document.getElementById("default-tab");
+    if (tabsElement) {
+      const tabElements: TabItem[] = [
+        {
+          id: "today",
+          triggerEl: document.getElementById("Today-tab")!,
+          targetEl: document.getElementById("today")!,
+        },
+        {
+          id: "all",
+          triggerEl: document.getElementById("All-tab")!,
+          targetEl: document.getElementById("all")!,
+        },
+      ];
 
-            const options: TabsOptions = {
-                defaultTabId: "today",
-                activeClasses: "text-blue-600 border-blue-600",
-                inactiveClasses: "text-gray-500 border-transparent",
-            };
+      const options: TabsOptions = {
+        defaultTabId: "today",
+        activeClasses: "text-blue-600 border-blue-600",
+        inactiveClasses: "text-gray-500 border-transparent",
+      };
 
-            new Tabs(tabsElement, tabElements, options);
-        }
-    }, []);
+      new Tabs(tabsElement, tabElements, options);
+    }
+  }, []);
 
-    // Fetch API notifications
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const res = await axiosInstance.get("https://api-linkup.id.vn/api/noti/getNotification", {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                    },
-                });
-    
-                const data = res.data;
-                if (data.isSuccess && Array.isArray(data.data)) {
-                    const formatted = data.data.map((item: any) => ({
-                        id: item.id,
-                        message: item.message,
-                        name: item.User?.username || "Người dùng",
-                        avatar: item.User?.avatar || "/default-avatar.png",
-                        receivingDate: item.receivingDate || item.createdAt,
-                    }));
-                    setNotifications(formatted);
-                }
-            } catch (err) {
-                console.error("Failed to fetch notifications", err);
-            }
-        };
-    
-        fetchNotifications();
-    }, []);
-
-    // Socket realtime
-    useEffect(() => {
-        const handleNotification = (notification: any) => {
-            setNotifications((prev) => [notification, ...prev]);
-        };
-
-        if (socket) {
-            socket.on("notification", handleNotification);
-            return () => {
-                socket.off("notification", handleNotification);
-            };
-        }
-    }, [socket]);
-
-    const handleFollow = (userId: number) => {
-        setFollowedUsers((prev) =>
-            prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await axiosInstance.get(
+          "https://api-linkup.id.vn/api/noti/getNotification",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
         );
+
+        const data = res.data.data; // <-- data là mảng rồi
+        console.log("data: ", data);
+        if (Array.isArray(data)) {
+          const formatted = data.map((item: any) => ({
+            id: item.id,
+            message: item.message,
+            name: item.User?.username || "Người dùng",
+            avatar: item.User?.avatar || "/default-avatar.png",
+            receivingDate: item.receivingDate || item.createdAt,
+          }));
+          setNotifications(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications", err);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  useEffect(() => {
+    console.log("Notifications state:", notifications);
+  }, [notifications]);
+
+  // Socket realtime
+  useEffect(() => {
+    const handleNotification = (notification: any) => {
+      setNotifications((prev) => [notification, ...prev]);
     };
 
-    return (
-        <div className="flex flex-col min-h-screen p-4">
-            <h1 className="ps-4 text-lg font-semibold">Thông báo</h1>
+    if (socket) {
+      socket.on("notification", handleNotification);
+      return () => {
+        socket.off("notification", handleNotification);
+      };
+    }
+  }, [socket]);
 
-            <div className="mb-4 border-b border-gray-700">
-                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" id="default-tab" role="tablist">
-                    <li className="mr-2" role="presentation">
-                        <button className="inline-block p-4 border-b-2 rounded-t-lg active" id="Today-tab" type="button" role="tab" aria-controls="today" aria-selected="true">
-                            Hôm nay
-                        </button>
-                    </li>
-                    <li className="mr-2" role="presentation">
-                        <button className="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-400 hover:border-gray-500" id="All-tab" type="button" role="tab" aria-controls="all" aria-selected="false">
-                            Tất cả
-                        </button>
-                    </li>
-                </ul>
-            </div>
+  // const handleFollow = (userId: number) => {
+  //     setFollowedUsers((prev) =>
+  //         prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+  //     );
+  // };
 
-            <div>
-                <div className="p-4 space-y-3 rounded-lg" id="today" role="tabpanel">
-                    {notifications.map((noti, index) => (
-                        <div key={index} className={`flex items-center p-3 rounded-lg shadow-md ${theme === "dark" ? "bg-black" : "bg-white"}`}>
-                            <img src={noti.avatar || "/default-avatar.png"} alt="Avatar" className="w-10 h-10 rounded-full me-3" />
-                            <span className="text-sm text-gray-500">
-                                <strong className="text-gray-500">{noti.name}</strong> {noti.message}
-                            </span>
-                            <button
+  return (
+    <div className="flex flex-col min-h-screen p-4">
+      <h1 className="ps-4 text-lg font-semibold">Thông báo</h1>
+
+      <div className="mb-4 border-b border-gray-700">
+        <ul
+          className="flex flex-wrap -mb-px text-sm font-medium text-center"
+          id="default-tab"
+          role="tablist"
+        >
+          <li className="mr-2" role="presentation">
+            <button
+              className="inline-block p-4 border-b-2 rounded-t-lg active"
+              id="Today-tab"
+              type="button"
+              role="tab"
+              aria-controls="today"
+              aria-selected="true"
+            >
+              Hôm nay
+            </button>
+          </li>
+          <li className="mr-2" role="presentation">
+            <button
+              className="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-400 hover:border-gray-500"
+              id="All-tab"
+              type="button"
+              role="tab"
+              aria-controls="all"
+              aria-selected="false"
+            >
+              Tất cả
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <div className="p-4 space-y-3 rounded-lg" id="today" role="tabpanel">
+          {notifications.map((noti, index) => (
+            <div
+              key={index}
+              className={`flex items-center p-3 rounded-lg shadow-md ${
+                theme === "dark" ? "bg-black" : "bg-white"
+              }`}
+            >
+              <img
+                src={noti.avatar || "/default-avatar.png"}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full me-3"
+              />
+              <div className="flex flex-col text-sm text-gray-500">
+                <span>
+                  <strong className="text-gray-500">{noti.name}</strong>{" "}
+                  {noti.message}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {new Date(noti.receivingDate).toLocaleString()}
+                </span>
+              </div>
+              {/* <button
                                 className={`px-3 py-1 rounded-lg flex items-center gap-2 ms-auto ${followedUsers.includes(noti.id) ? "bg-green-500" : "bg-blue-500 hover:bg-blue-600"} text-white`}
                                 onClick={() => handleFollow(noti.id)}
                             >
@@ -129,22 +169,41 @@ export default function Notification() {
                                     </svg>
                                 )}
                                 <span>{followedUsers.includes(noti.id) ? "Đang theo dõi" : "Follow"}</span>
-                            </button>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="hidden p-4 space-y-3 rounded-lg" id="all" role="tabpanel">
-                    {notifications.map((noti) => (
-                        <div key={noti.id} className={`flex items-center p-3 rounded-lg shadow-md ${theme === "dark" ? "bg-black" : "bg-white"}`}>
-                            <img src={noti.avatar || "/default-avatar.png"} alt="Avatar" className="w-10 h-10 rounded-full me-3" />
-                            <span className="text-sm text-gray-500">
-                                <strong className="text-gray-500">{noti.name}</strong> {noti.message}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                            </button> */}
             </div>
+          ))}
         </div>
-    );
+
+        <div
+          className="hidden p-4 space-y-3 rounded-lg"
+          id="all"
+          role="tabpanel"
+        >
+          {notifications.map((noti, index) => (
+            <div
+              key={index}
+              className={`flex items-center p-3 rounded-lg shadow-md ${
+                theme === "dark" ? "bg-black" : "bg-white"
+              }`}
+            >
+              <img
+                src={noti.avatar || "/default-avatar.png"}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full me-3"
+              />
+              <div className="flex flex-col text-sm text-gray-500">
+                <span>
+                  <strong className="text-gray-500">{noti.name}</strong>{" "}
+                  {noti.message}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {new Date(noti.receivingDate).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

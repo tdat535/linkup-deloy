@@ -21,14 +21,8 @@ const ChatPage = ({ theme }: { theme: string }) => {
   useEffect(() => {
     if (!socket || !currentUserId) return;
 
-    socket.emit("userOnline", currentUserId);
-
     socket.on("receiveMessage", (newMessage: MessengerDetail) => {
       setMessages((prev) => [...prev, newMessage]);
-    });
-
-    socket.on("notification", (data) => {
-      console.log("🔔 Notification:", data);
     });
 
     return () => {
