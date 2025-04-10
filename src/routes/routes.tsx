@@ -8,6 +8,7 @@ import PostsPage from '../Pages/Dashboard/PostsPage';
 import ErrorPage from '../Pages/ErrorPage';
 import FeatureDevelopingPage from '../Pages/FeatureDevelopingPage';
 import CommentPage from '../Pages/Dashboard/CommentPage';
+import ReportPage from '../Pages/Dashboard/ReportPage';
 
 import "react-toastify/dist/ReactToastify.css";
 import React from 'react';
@@ -71,6 +72,7 @@ const AppRoutes = ({token}: { token: string | null }) => {
                         <Route path="users-list" element={<UsersPage />} />
                         <Route path="posts-list" element={<PostsPage />} />
                         <Route path="comments-list" element={<CommentPage/>} />
+                        <Route path="report-list" element={<ReportPage/>} />
                     </Route>
 
                     <Route path='*' element={<ErrorPage />} />

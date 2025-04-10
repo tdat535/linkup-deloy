@@ -3,55 +3,53 @@ import { ArrowLeft, Send } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import axiosInstance from "../../TokenRefresher";
 import React from "react";
-
-interface MessengerDetail {
-  id: number;
-  content: string;
-  image?: string | null;
-  receivingDate?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  sender: {
-    id: number;
-    username: string;
-    avatar?: string | null;
-  };
-  receiver: {
-    id: number;
-    username: string;
-    avatar?: string | null;
-  };
-}
-
-interface MessengerOverview {
-  lastMessage: string;
-  lastMessageTime: string;
-  user: {
-    id: number;
-    username: string;
-    avatar?: string | null;
-  };
-}
+import { connectSocket, disconnectSocket, getSocket } from "../../socket";
+import axios from "axios";
+import { MessengerDetail } from "./MessengerDetail";
+import { Messenger } from "./Messenger";
+import { User } from "./User";
 
 const ChatPage = ({ theme }: { theme: string }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [conversations, setConversations] = useState<MessengerOverview[]>([]);
+  const [conversations, setConversations] = useState<Messenger[]>([]);
   const [messages, setMessages] = useState<MessengerDetail[]>([]);
   const [input, setInput] = useState("");
-  const [otherUser, setOtherUser] = useState<{
-    username: string;
-    avatar: string;
-  }>({
+  const [otherUser, setOtherUser] = useState<User>({
+    id: 0,
     username: "",
     avatar: "",
   });
   const currentUserId = localStorage.getItem("currentUserId");
 
+  useEffect(() => {
+    const userId = localStorage.getItem("currentUserId");
+    if (!userId) return;
+  
+    const socketInstance = connectSocket();
+  
+    socketInstance.emit("userOnline", Number(userId));
+  
+    socketInstance.on("receiveMessage", (newMessage: MessengerDetail) => {
+      setMessages((prev) => [...prev, newMessage]);
+    });
+  
+    socketInstance.on("notification", (data) => {
+      console.log("🔔 Notification:", data);
+    });
+  
+    return () => {
+      socketInstance.off("receiveMessage");
+      socketInstance.off("notification");
+      disconnectSocket(); // Cleanup
+    };
+  }, []);
+  
+
   // Lấy danh sách hội thoại
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await axiosInstance.get(
+        const res = await axios.get(
           "https://api-linkup.id.vn/api/texting/getMessenger",
           {
             headers: {
@@ -76,7 +74,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
     if (!token || !userId) return;
 
     try {
-      const res = await axiosInstance.get(
+      const res = await axios.get(
         "https://api-linkup.id.vn/api/texting/getMessengerDetail",
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -89,21 +87,27 @@ const ChatPage = ({ theme }: { theme: string }) => {
         setMessages(res.data.data);
         const messageData = res.data.data.find(
           (msg: MessengerDetail) =>
-            msg.receiver?.id === Number(userId) ||
-            msg.sender?.id === Number(userId)
+            msg.senderId === Number(userId) || msg.receiverId === Number(userId)
         );
+        
         if (messageData) {
           const user =
-            messageData.receiver?.id === userId
+            messageData.senderId === Number(userId)
+              ? messageData.sender
+              : messageData.senderId === Number(currentUserId)
               ? messageData.receiver
-              : messageData.sender;
-          setOtherUser({
-            username: user?.username || "Unknown",
-            avatar:
-              user?.avatar ||
-              "https://i.pinimg.com/236x/5e/e0/82/5ee082781b8c41406a2a50a0f32d6aa6.jpg",
-          });
-        }
+              : null;
+        
+          if (user) {
+            setOtherUser({
+              id: user.id,
+              username: user.username || "Unknown",
+              avatar:
+                user.avatar ||
+                "https://i.pinimg.com/236x/5e/e0/82/5ee082781b8c41406a2a50a0f32d6aa6.jpg",
+            });
+          }
+        }        
         setIsChatOpen(true);
       }
     } catch (err) {
@@ -111,44 +115,48 @@ const ChatPage = ({ theme }: { theme: string }) => {
     }
   };
 
-  const sendMessage = async () => {
-    // if (!input.trim() || !selectedUserId) return;
-    // const token = localStorage.getItem("accessToken");
-    // try {
-    //   await axiosInstance.post(
-    //     "https://api-linkup.id.vn/messenger/sendMessage",
-    //     {
-    //       receiverId: selectedUserId,
-    //       content: input.trim(),
-    //     },
-    //     {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     }
-    //   );
-    //   setMessages((prev) => [
-    //     ...prev,
-    //     {
-    //       id: Date.now(), // Temporary unique ID
-    //       content: input.trim(),
-    //       createdAt: new Date().toISOString(),
-    //       updatedAt: new Date().toISOString(),
-    //       sender: {
-    //         id: Number(localStorage.getItem("currentUserId")) || 0,
-    //         username: "Tôi",
-    //         avatar: null,
-    //       },
-    //       receiver: {
-    //         id: Number(selectedUserId),
-    //         username: otherUser.username,
-    //         avatar: otherUser.avatar,
-    //       },
-    //     },
-    //   ]);
-    //   setInput("");
-    // } catch (err) {
-    //   console.error("Lỗi khi gửi tin nhắn:", err);
-    // }
+  const sendMessage = () => {
+    if (!input.trim() || !otherUser.username) return;
+  
+    const senderId = Number(currentUserId);
+    const receiverId = conversations.find(c => c.user.username === otherUser.username)?.user.id;
+  
+    if (!receiverId) return;
+  
+    const messageData = {
+      senderId,
+      receiverId,
+      content: input.trim(),
+      image: null,
+    };
+  
+    try {
+      const socketInstance = getSocket();
+      socketInstance.emit("sendMessage", messageData);
+    } catch (err) {
+      console.error("Socket chưa được kết nối:", err);
+    }
+  
+    // UI Preview
+    setMessages((prev) => [...prev, {
+      id: Date.now(),
+      content: input.trim(),
+      image: null,
+      receivingDate: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      senderId: senderId,
+      receiverId: receiverId,
+      sender: {
+        id: senderId,
+        username: "Tôi",
+        avatar: null,
+      },
+    }]);
+  
+    setInput("");
   };
+  
 
   return (
     <div className="flex h-screen">

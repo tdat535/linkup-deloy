@@ -149,6 +149,16 @@ const AdminSidebar = () => {
                 />
               </ListItemButton>
             </Link>
+
+            <Link to="/admin/report-list">
+              <ListItemButton>
+                <ListItemText 
+                  inset 
+                  primary="Báo cáo từ người dùng" 
+                  sx={{ pl: 2 }}
+                />
+              </ListItemButton>
+            </Link>
           </List>
         </Collapse>
         
