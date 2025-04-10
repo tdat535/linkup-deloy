@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft, Send } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
-import axiosInstance from "../../TokenRefresher";
-import React from "react";
-import { connectSocket, disconnectSocket, getSocket } from "../../socket";
 import axios from "axios";
-import { MessengerDetail } from "./MessengerDetail";
+import { connectSocket, disconnectSocket, getSocket } from "../../socket";
 import { Messenger } from "./Messenger";
+import { MessengerDetail } from "./MessengerDetail";
 import { User } from "./User";
 
 const ChatPage = ({ theme }: { theme: string }) => {
@@ -14,38 +12,29 @@ const ChatPage = ({ theme }: { theme: string }) => {
   const [conversations, setConversations] = useState<Messenger[]>([]);
   const [messages, setMessages] = useState<MessengerDetail[]>([]);
   const [input, setInput] = useState("");
-  const [otherUser, setOtherUser] = useState<User>({
-    id: 0,
-    username: "",
-    avatar: "",
-  });
-  const currentUserId = localStorage.getItem("currentUserId");
-
+  const [otherUser, setOtherUser] = useState<User | null>(null);
+  const currentUserId = Number(localStorage.getItem("currentUserId"));
   useEffect(() => {
-    const userId = localStorage.getItem("currentUserId");
-    if (!userId) return;
-  
-    const socketInstance = connectSocket();
-  
-    socketInstance.emit("userOnline", Number(userId));
-  
-    socketInstance.on("receiveMessage", (newMessage: MessengerDetail) => {
+    if (!currentUserId) return;
+    const socket = connectSocket();
+
+    socket.emit("userOnline", currentUserId);
+
+    socket.on("receiveMessage", (newMessage: MessengerDetail) => {
       setMessages((prev) => [...prev, newMessage]);
     });
-  
-    socketInstance.on("notification", (data) => {
+
+    socket.on("notification", (data) => {
       console.log("🔔 Notification:", data);
     });
-  
-    return () => {
-      socketInstance.off("receiveMessage");
-      socketInstance.off("notification");
-      disconnectSocket(); // Cleanup
-    };
-  }, []);
-  
 
-  // Lấy danh sách hội thoại
+    return () => {
+      socket.off("receiveMessage");
+      socket.off("notification");
+      disconnectSocket();
+    };
+  }, [currentUserId]);
+
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -68,96 +57,79 @@ const ChatPage = ({ theme }: { theme: string }) => {
     fetchConversations();
   }, []);
 
-  // Hàm tải chi tiết tin nhắn khi chọn user
   const loadConversation = async (userId: string) => {
-    const token = localStorage.getItem("accessToken");
-    if (!token || !userId) return;
-
     try {
       const res = await axios.get(
         "https://api-linkup.id.vn/api/texting/getMessengerDetail",
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
           params: { otherUserId: userId },
         }
       );
 
       if (res.data.isSuccess) {
-        console.log("Dữ liệu chi tiết tin nhắn:", res.data.data);
-        setMessages(res.data.data);
-        const messageData = res.data.data.find(
-          (msg: MessengerDetail) =>
-            msg.senderId === Number(userId) || msg.receiverId === Number(userId)
-        );
-        
-        if (messageData) {
-          const user =
-            messageData.senderId === Number(userId)
-              ? messageData.sender
-              : messageData.senderId === Number(currentUserId)
-              ? messageData.receiver
-              : null;
-        
-          if (user) {
-            setOtherUser({
-              id: user.id,
-              username: user.username || "Unknown",
-              avatar:
-                user.avatar ||
-                "https://i.pinimg.com/236x/5e/e0/82/5ee082781b8c41406a2a50a0f32d6aa6.jpg",
-            });
-          }
-        }        
+        const messageList: MessengerDetail[] = res.data.data;
+        setMessages(messageList);
         setIsChatOpen(true);
+      
+        // Xác định người còn lại
+        const msg = messageList[0];
+        if (msg.senderId !== currentUserId) {
+          setOtherUser(msg.sender); // sender là người còn lại
+        } else {
+          // Nếu sender là currentUser, thì không có thông tin receiver -> dùng tạm từ danh sách hội thoại
+          const found = conversations.find(c => c.user.id.toString() === userId);
+          if (found) setOtherUser(found.user);
+        }
       }
+      
     } catch (err) {
       console.error("Lỗi khi lấy chi tiết tin nhắn:", err);
     }
   };
 
   const sendMessage = () => {
-    if (!input.trim() || !otherUser.username) return;
-  
-    const senderId = Number(currentUserId);
-    const receiverId = conversations.find(c => c.user.username === otherUser.username)?.user.id;
-  
-    if (!receiverId) return;
-  
-    const messageData = {
-      senderId,
-      receiverId,
+    if (!input.trim() || !otherUser) return;
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const message = {
+      senderId: currentUserId,
+      receiverId: otherUser.id,
       content: input.trim(),
       image: null,
     };
-  
+
     try {
-      const socketInstance = getSocket();
-      socketInstance.emit("sendMessage", messageData);
+      const socket = getSocket();
+      socket.emit("sendMessage", message);
     } catch (err) {
       console.error("Socket chưa được kết nối:", err);
     }
-  
-    // UI Preview
-    setMessages((prev) => [...prev, {
-      id: Date.now(),
-      content: input.trim(),
-      image: null,
-      receivingDate: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      senderId: senderId,
-      receiverId: receiverId,
-      sender: {
-        id: senderId,
-        username: "Tôi",
-        avatar: null,
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        content: input.trim(),
+        image: null,
+        receivingDate: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        senderId: currentUserId,
+        receiverId: otherUser.id,
+        sender: {
+          id: currentUserId,
+          username: "Tôi",
+          avatar: currentUser.avatar || null,
+        },
       },
-    }]);
-  
+    ]);
+
     setInput("");
   };
   
-
   return (
     <div className="flex h-screen">
       {/* Sidebar trái */}
@@ -185,7 +157,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
           ))}
         </ul>
       </aside>
-
+  
       {/* Chi tiết chat */}
       <div
         className={`flex-1 flex flex-col ml-0 md:ml-64 z-50 h-full ${
@@ -212,12 +184,14 @@ const ChatPage = ({ theme }: { theme: string }) => {
             alt="Avatar"
           />
           <span
-            className={`ml-4 ${theme === "dark" ? "text-white" : "text-black"}`}
+            className={`ml-4 ${
+              theme === "dark" ? "text-white" : "text-black"
+            }`}
           >
             {otherUser?.username || "Chọn cuộc trò chuyện"}
           </span>
         </div>
-
+  
         {/* Nội dung tin nhắn */}
         <div
           className={`flex-1 overflow-y-auto p-10 space-y-2 max-h-[calc(100vh-100px)] ${
@@ -243,7 +217,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
                   alt="Avatar"
                 />
               )}
-
+  
               {/* Tin nhắn */}
               <div
                 className={`break-all whitespace-pre-wrap max-w-[80%] md:max-w-[60%] p-3 rounded-lg ${
@@ -254,7 +228,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
               >
                 {msg.content}
               </div>
-
+  
               {/* Nếu người gửi là currentUserId, ảnh nằm phía sau */}
               {msg.sender?.id === Number(currentUserId) && (
                 <img
@@ -266,7 +240,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
             </div>
           ))}
         </div>
-
+  
         {/* Nhập tin nhắn */}
         <div
           className={`p-4 shadow-lg sticky bottom-0 left-0 right-0 md:left-128 md:right-0 ${
@@ -301,6 +275,5 @@ const ChatPage = ({ theme }: { theme: string }) => {
       </div>
     </div>
   );
-};
-
+}
 export default ChatPage;

@@ -8,9 +8,10 @@ import axiosInstance from "../../TokenRefresher";
 interface PostModalProps {
   isOpen: boolean;
   onClose: () => void;
+  refreshPosts: () => void; // thêm prop này
 }
 
-const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
+const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) => {
   const [user, setUser] = useState<{
     username: string;
     email: string;
@@ -100,16 +101,11 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
       if (image) {
         formData.append("file", image);
         formData.append("type", "post");
-      }
-      if (video) {
+      } else if (video) {
         formData.append("file", video);
         formData.append("type", "video");
       } else {
         formData.append("type", "post");
-      }
-
-      for (let [key, value] of (formData as any).entries()) {
-        console.log(`${key}:`, value);
       }
 
       const response = await axiosInstance.post(url, formData, {
@@ -127,6 +123,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
         setImagePreview(null);
         setVideoPreview(null);
         onClose();
+        refreshPosts(); // ⬅️ Gọi hàm cập nhật bài viết
       }
     } catch (error) {
       console.error("Lỗi khi đăng bài:", error);

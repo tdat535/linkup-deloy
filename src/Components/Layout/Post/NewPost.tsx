@@ -4,7 +4,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import PostModal from '../Modal/PostModal';
 import React from "react";
 
-const NewPost = () => {
+const NewPost = ({ refreshPosts }: { refreshPosts: () => void }) => {
   const [value, setValue] = useState('');
   const [isOpen, setIsOpen] = useState(false); // State để điều khiển modal
   const [user, setUser] = useState<{ username: string, email: string, phonenumber: string, realname: string } | null>(null); // Thông tin người dùng
@@ -46,7 +46,7 @@ const NewPost = () => {
       </div>
 
       {/* Hiển thị Modal khi isOpen = true */}
-      {isOpen && <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} />}
+      {isOpen && <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} refreshPosts={refreshPosts} />}
     </>
   );
 };
