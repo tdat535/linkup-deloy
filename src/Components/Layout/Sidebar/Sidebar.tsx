@@ -7,7 +7,7 @@ import PostModal from "../Modal/PostModal";
 import { useTheme } from "../../../context/ThemeContext"; // Import useTheme
 import React from "react";
 
-const Sidebar = () => {
+const Sidebar = ({ refreshPosts }: { refreshPosts: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { theme, toggleTheme } = useTheme(); // Lấy theme và toggleTheme từ context
@@ -63,7 +63,7 @@ const Sidebar = () => {
           <Plus size={24} />
         </button>
       </motion.div>
-      {isOpen && <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} />}
+      {isOpen && <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} refreshPosts={refreshPosts} />}
     </>
   );
 };
