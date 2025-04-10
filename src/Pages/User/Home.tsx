@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import NewPost from '../../Components/Layout/Post/NewPost';
 import PostList from '../../Components/Layout/Post/PostList';
 import { PostProps } from '../../Components/Layout/Post/PostProps';
-import axiosInstance from 'Components/TokenRefresher';
+import axiosInstance from '../../Components/TokenRefresher';
 
 const Home: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
