@@ -1,6 +1,6 @@
 // src/services/auth.ts
 import axios from 'axios';
-import axiosInstance from 'Components/TokenRefresher';
+import axiosInstance from '../Components/TokenRefresher';
 
 const API_URL = 'https://api-linkup.id.vn/api';
 
