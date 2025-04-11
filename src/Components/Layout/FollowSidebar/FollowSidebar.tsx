@@ -5,7 +5,7 @@ import { FiChevronDown, FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/
 import { useTheme } from "../../../context/ThemeContext";
 import axios from "axios";
 import React from "react";
-import axiosInstance from "Components/TokenRefresher";
+import axiosInstance from "../../TokenRefresher";
 
 const FollowSidebar = () => {
     const [user, setUser] = useState<{ username: string, email: string, phonenumber: string, avatar?: string } | null>(null);
