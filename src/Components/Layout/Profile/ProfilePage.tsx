@@ -200,6 +200,10 @@ const ProfilePage = () => {
     );
   }
 
+  const handleClickUser = (userId: number) => {
+    navigate("/home/messages", { state: { userId } });
+  };
+
   if (error) return <ErrorPage />;
 
   if (!user || !profileData) {
@@ -213,9 +217,11 @@ const ProfilePage = () => {
   return (
     <div className="flex-1">
       {/* Header */}
-      <div className={`fixed top-0 left-0 right-0 md:left-64 md:right-64 p-4 border-b border-gray-300 z-10 flex ${
-        theme === "dark" ? "bg-black text-white" : "bg-white text-black"
-      }`}>
+      <div
+        className={`fixed top-0 left-0 right-0 md:left-64 md:right-64 p-4 border-b border-gray-300 z-10 flex ${
+          theme === "dark" ? "bg-black text-white" : "bg-white text-black"
+        }`}
+      >
         <h2 className="text-lg font-bold">{name || "Profile"}</h2>
       </div>
 
@@ -248,12 +254,20 @@ const ProfilePage = () => {
               Chỉnh sửa hồ sơ
             </button>
           ) : followStatus === "Đang theo dõi" ? (
-            <button
-              onClick={() => handleUnfollow(Number(userId))}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
-            >
-              Hủy theo dõi
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleClickUser(Number(userId))}
+                className="text-white bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg text-sm"
+              >
+                Nhắn tin
+              </button>
+              <button
+                onClick={() => handleUnfollow(Number(userId))}
+                className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
+              >
+                Hủy theo dõi
+              </button>
+            </div>
           ) : (
             <button
               onClick={() => handleFollow(Number(userId))}
@@ -269,10 +283,16 @@ const ProfilePage = () => {
       {openModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 backdrop-blur-sm">
           <div className="p-6 rounded-md w-full max-w-lg bg-white dark:bg-black text-black dark:text-white">
-            <h2 className="text-lg font-bold mb-4 text-center">Chỉnh sửa hồ sơ</h2>
+            <h2 className="text-lg font-bold mb-4 text-center">
+              Chỉnh sửa hồ sơ
+            </h2>
             <div className="flex flex-col items-center space-y-2 mb-4">
               {formAvatar && (
-                <img src={formAvatar} alt="Xem trước" className="w-20 h-20 rounded-full object-cover" />
+                <img
+                  src={formAvatar}
+                  alt="Xem trước"
+                  className="w-20 h-20 rounded-full object-cover"
+                />
               )}
               <input
                 type="file"
@@ -289,20 +309,109 @@ const ProfilePage = () => {
             </div>
 
             <div className="space-y-4">
-              <input type="text" placeholder="Tên người dùng" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white" />
-              <TextareaAutosize className="w-full p-2 border rounded-md resize-none dark:bg-gray-800 dark:text-white" minRows={2} maxRows={5} placeholder="Nhập tiểu sử (tối đa 160 ký tự)" value={formBio} maxLength={160} onChange={(e) => setFormBio(e.target.value)} />
-              <input type="email" placeholder="Email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white" />
-              <input type="text" placeholder="Số điện thoại" value={formPhoneNumber} onChange={(e) => setFormPhoneNumber(e.target.value)} className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white" />
-              <p className="text-sm text-right text-gray-500">{formBio.length}/160</p>
+              <input
+                type="text"
+                placeholder="Tên người dùng"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white"
+              />
+              <TextareaAutosize
+                className="w-full p-2 border rounded-md resize-none dark:bg-gray-800 dark:text-white"
+                minRows={2}
+                maxRows={5}
+                placeholder="Nhập tiểu sử (tối đa 160 ký tự)"
+                value={formBio}
+                maxLength={160}
+                onChange={(e) => setFormBio(e.target.value)}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={formEmail}
+                onChange={(e) => setFormEmail(e.target.value)}
+                className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white"
+              />
+              <input
+                type="text"
+                placeholder="Số điện thoại"
+                value={formPhoneNumber}
+                onChange={(e) => setFormPhoneNumber(e.target.value)}
+                className="w-full p-2 border rounded-md dark:bg-gray-800 dark:text-white"
+              />
+              <p className="text-sm text-right text-gray-500">
+                {formBio.length}/160
+              </p>
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-md" onClick={handleUpdateProfile}>Lưu</button>
-              <button className="bg-gray-500 text-white px-4 py-2 rounded-md" onClick={() => setOpenModal(false)}>Hủy</button>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                onClick={handleUpdateProfile}
+              >
+                Lưu
+              </button>
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded-md"
+                onClick={() => setOpenModal(false)}
+              >
+                Hủy
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Danh sách bài viết */}
+      <div className="max-w-4xl mx-auto px-4 pb-10">
+        <h3 className="text-lg font-semibold mb-4">Bài viết</h3>
+        {profileData.posts && profileData.posts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {profileData.posts.map((post: any) => {
+              const isImage = post.mediaUrl?.match(
+                /\.(jpeg|jpg|png|gif|webp)$/i
+              );
+              const isVideo = post.mediaUrl?.match(/\.(mp4|webm|ogg|mov)$/i);
+
+              return (
+                <div
+                  key={post.id}
+                  className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition"
+                >
+                  {isImage && (
+                    <img
+                      src={post.mediaUrl}
+                      alt="Post media"
+                      className="w-full h-60 object-cover"
+                    />
+                  )}
+
+                  {isVideo && (
+                    <video
+                      controls
+                      className="w-full h-60 object-cover bg-black"
+                    >
+                      <source src={post.mediaUrl} type="video/mp4" />
+                      Trình duyệt của bạn không hỗ trợ video.
+                    </video>
+                  )}
+
+                  <div className="p-3">
+                    <p className="text-sm text-gray-800 dark:text-gray-200">
+                      {post.content}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(post.createdAt).toLocaleString("vi-VN")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-gray-500">Người dùng chưa có bài viết nào.</p>
+        )}
+      </div>
     </div>
   );
 };
