@@ -152,7 +152,7 @@ const ProfilePage = () => {
       if (formAvatarFile) formData.append("avatar", formAvatarFile);
 
       const res = await axiosInstance.put(
-        `http://192.168.5.54:4000/api/auth/updateProfile`,
+        `https://api-linkup.id.vn/api/auth/updateProfile`,
         formData,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
