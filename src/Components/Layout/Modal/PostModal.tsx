@@ -37,8 +37,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
   const [user, setUser] = useState<{
     username: string;
     email: string;
-    phonenumber: string;
-    realname: string;
+    avatar: string;
   } | null>(null);
 
   useEffect(() => {
@@ -198,7 +197,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
       <DialogContent sx={{ pt: 3 }}>
         <Box display="flex" alignItems="center" mb={2}>
           <Avatar 
-            src="https://via.placeholder.com/80" 
+            src={user?.avatar}
             alt={user?.username || "User"} 
             sx={{ 
               width: 48, 

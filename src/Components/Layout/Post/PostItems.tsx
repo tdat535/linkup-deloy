@@ -204,7 +204,7 @@ const PostItem: React.FC<{ post: PostProps }> = ({ post }) => {
             onClick={() => handleLike(post.id)}
             className="flex items-center gap-1 hover:text-red-500"
           >
-            <HandThumbUpIcon className="w-5 h-5" /> <span>1</span>
+            <HandThumbUpIcon className="w-5 h-5" />
           </button>
 
           <button

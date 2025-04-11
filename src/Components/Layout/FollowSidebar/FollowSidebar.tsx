@@ -12,20 +12,11 @@ import { useTheme } from "../../../context/ThemeContext";
 import axios from "axios";
 import React from "react";
 import axiosInstance from "../../TokenRefresher";
+import { useUser } from "../../../context/UserContext";
 
-interface FollowSidebarProps {
-  onReady?: () => void;
-}
-
-const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
-  const [user, setUser] = useState<{
-    username: string;
-    email: string;
-    phonenumber: string;
-    avatar?: string;
-  } | null>(null);
+const FollowSidebar = () => {
+  const { user } = useUser(); // ✅ Đặt ở đây, ngoài useEffect
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [avatar, setAvatar] = useState("");
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -36,13 +27,7 @@ const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     const handleResize = () => setIsMobile(mediaQuery.matches);
-
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      setUser(parsed);
-      setAvatar(parsed.avatar || "https://via.placeholder.com/80");
-    }
+    mediaQuery.addEventListener("change", handleResize);
 
     const fetchFollowings = async () => {
       try {
@@ -56,7 +41,6 @@ const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
           }
         );
         if (res.data.isSuccess && res.data.following) {
-          console.log("data follow: ", res.data.following);
           setFollowings(res.data.following);
         }
       } catch (err) {
@@ -66,9 +50,8 @@ const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
 
     fetchFollowings();
 
-    mediaQuery.addEventListener("change", handleResize);
     return () => mediaQuery.removeEventListener("change", handleResize);
-  }, []);
+  }, [user]); // 👈 Thêm user vào dependency nếu muốn cập nhật avatar mỗi khi user đổi
 
   const handleLogout = () => {
     logout();
@@ -96,7 +79,7 @@ const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
             className="flex items-center space-x-2"
           >
             <img
-              src={avatar}
+              src={user?.avatar}
               alt="Avatar"
               className="w-10 h-10 rounded-full border-2 border-gray-600"
             />
@@ -151,7 +134,7 @@ const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <img
-            src={avatar}
+            src={user?.avatar}
             alt="Avatar"
             className="w-10 h-10 rounded-full mr-3 object-cover"
           />

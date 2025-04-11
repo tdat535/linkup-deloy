@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
 import axiosInstance from "../../Components/TokenRefresher";
+import { useUser } from "../../context/UserContext"; // hoặc đường dẫn phù hợp
 
 type FormData = {
   email: string;
@@ -20,6 +21,8 @@ const Login = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
   const url = "https://api-linkup.id.vn/api/auth/login";
+
+  const { setUser } = useUser();
 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
@@ -95,7 +98,7 @@ const Login = () => {
       if (AccessToken && RefreshToken) {
         localStorage.setItem("accessToken", AccessToken);
         localStorage.setItem("refreshToken", RefreshToken);
-
+      
         const userData = {
           username: Username,
           email: Email,
@@ -104,19 +107,22 @@ const Login = () => {
           userId: UserId,
           avatar: Avatar,
         };
+      
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("currentUserId", UserId);
-
+      
+        setUser(userData); // ✅ Cập nhật context ở đây
+      
         console.log("✅ Login successful, redirecting...");
-
         if (UserType === "admin") {
           navigate("/admin", { replace: true });
         } else {
           navigate("/home", { replace: true });
         }
-          
+      
         window.location.reload();
-      } else {
+      }
+       else {
         throw new Error("Incomplete data returned!");
       }
     } catch (err: any) {

@@ -146,16 +146,22 @@ const ProfilePage = () => {
     try {
       const formData = new FormData();
       formData.append("username", formName);
+      if (/\s/.test(formName)) {
+        alert("Tên người dùng không được chứa khoảng trắng.");
+        return;
+      }
       formData.append("bio", formBio);
       formData.append("email", formEmail);
       formData.append("phonenumber", formPhoneNumber);
       if (formAvatarFile) formData.append("avatar", formAvatarFile);
 
       const res = await axiosInstance.put(
-        `https://api-linkup.id.vn/api/auth/updateProfile`,
+        `http://192.168.5.54:4000/api/auth/updateProfile`,
         formData,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+
+      console.log(res);
 
       if (res.data?.isSuccess) {
         alert("Cập nhật hồ sơ thành công!");
@@ -164,7 +170,25 @@ const ProfilePage = () => {
         setBio(formBio);
         setEmail(formEmail);
         setPhoneNumber(formPhoneNumber);
-        if (res.data.avatar) setAvatar(res.data.avatar);
+        if (res.data && res.data.user) {
+          console.log("new data: ", res.data);
+
+          const existingUser = JSON.parse(localStorage.getItem("user") || "{}");
+          const newUserData = res.data.user;
+
+          const updatedUser = {
+            ...existingUser, // giữ lại các field khác nếu có
+            username: newUserData.username || existingUser.username,
+            email: newUserData.email || existingUser.email,
+            phonenumber: newUserData.phonenumber || existingUser.phonenumber,
+            avatar: newUserData.avatar || existingUser.avatar,
+          };
+
+          console.log("data sau khi cập nhật", updatedUser);
+
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setOpenModal(false); // Đóng modal sau khi lưu
+        }
       } else {
         alert("Cập nhật thất bại.");
       }
