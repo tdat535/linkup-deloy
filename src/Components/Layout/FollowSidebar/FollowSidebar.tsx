@@ -2,22 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../../services/auth";
 import { FiChevronDown, FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/fi";
-import { useTheme } from "../../../context/ThemeContext"; // Import ThemeContext
+import { useTheme } from "../../../context/ThemeContext";
+import axios from "axios";
 import React from "react";
 
 const FollowSidebar = () => {
-    const [user, setUser] = useState<{ username: string, email: string, phonenumber: string } | null>(null);
+    const [user, setUser] = useState<{ username: string, email: string, phonenumber: string, avatar?: string } | null>(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [avatar, setAvatar] = useState("https://via.placeholder.com/80");
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { theme, toggleTheme } = useTheme(); // Lấy theme từ context
-
-    const [followings] = useState([
-        { id: 1, name: "Stark", avatar: "https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" },
-        { id: 2, name: "Tony", avatar: "https://thumbs.dreamstime.com/b/happy-smiling-young-handsome-asian-man-face-white-background-195696321.jpg" },
-        { id: 3, name: "Skibidi", avatar: "https://steamuserimages-a.akamaihd.net/ugc/2071135896060325080/825F188A141EEF65352B31D8CDBFAF860F5A1E7C/?imw=5000&imh=5000&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false" }
-    ]);
+    const { theme, toggleTheme } = useTheme();
+    const [followings, setFollowings] = useState<{ id: number; username: string; avatar: string }[]>([]);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia("(max-width: 768px)");
@@ -25,9 +21,29 @@ const FollowSidebar = () => {
 
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
-            setAvatar(JSON.parse(storedUser).avatar);
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+            setAvatar(parsed.avatar || "https://via.placeholder.com/80");
         }
+
+        const fetchFollowings = async () => {
+            try {
+                const accessToken = localStorage.getItem("accessToken");
+                const res = await axios.get("https://api-linkup.id.vn/api/follow/getFollow", {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                });
+                if (res.data.isSuccess && res.data.following) {
+                    console.log("data follow: ", res.data.following)
+                    setFollowings(res.data.following);
+                }
+            } catch (err) {
+                console.error("Lỗi khi lấy followings:", err);
+            }
+        };
+
+        fetchFollowings();
 
         mediaQuery.addEventListener("change", handleResize);
         return () => mediaQuery.removeEventListener("change", handleResize);
@@ -39,7 +55,7 @@ const FollowSidebar = () => {
 
     const handleToAdmin = () => {
         navigate("/admin");
-    }
+    };
 
     if (isMobile) {
         return (
@@ -81,8 +97,8 @@ const FollowSidebar = () => {
             <ul>
                 {followings.map((user) => (
                     <li key={user.id} className="flex items-center gap-3 mb-3 hover:bg-gray-700 p-2 rounded-lg cursor-pointer transition duration-200">
-                        <img src={user.avatar} alt={user.name} className="rounded-full w-9 h-9 border border-gray-400" />
-                        <span className="text-md">{user.name}</span>
+                        <img src={user.avatar} alt={user.username} className="rounded-full w-9 h-9 border border-gray-400" />
+                        <span className="text-md">{user.username}</span>
                     </li>
                 ))}
             </ul>

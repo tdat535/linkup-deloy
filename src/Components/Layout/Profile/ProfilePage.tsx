@@ -74,14 +74,29 @@ const ProfilePage = () => {
   const handleFollow = async (userId: number) => {
     try {
       if (!currentUserId || !userId || Number(currentUserId) === userId) return;
-
+  
       const response = await axiosInstance.post(
         "https://api-linkup.id.vn/api/follow/createFollow",
         { followingId: Number(userId) },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
-      if (response.data?.isSuccess) { 
+  
+      if (response.data?.isSuccess) {
+        setFollowStatus("Đang theo dõi"); // ✅ Cập nhật trạng thái ngay
+  
+        // ✅ Cập nhật followers ngay lập tức
+        setProfileData((prev: any) => ({
+          ...prev,
+          followers: [
+            ...(prev.followers || []),
+            {
+              id: Number(currentUserId),
+              username: localStorage.getItem("currentUsername") || "Bạn",
+              avatar: localStorage.getItem("currentAvatar") || "", // nếu có lưu avatar người dùng
+            },
+          ],
+        }));
+  
         if (socket) {
           socket.emit("follow", {
             followerId: Number(currentUserId),
@@ -98,15 +113,23 @@ const ProfilePage = () => {
 
   const handleUnfollow = async (userId: number) => {
     try {
-      const response = await axiosInstance.delete(
-        `https://api-linkup.id.vn/api/follow/deleteFollow?followingId=${userId}`,
+      const response = await axiosInstance.put(
+        `https://api-linkup.id.vn/api/follow/unfollow`,
+        { followingId: userId }, // gửi qua body
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
-
+  
       if (response.data?.isSuccess) {
-        setFollowStatus("Theo dõi");
+        setFollowStatus("Theo dõi lại"); // 👈 cho phép follow lại
+        setProfileData((prev: any) => ({
+          ...prev,
+          followers: (prev.followers || []).filter(
+            (f: any) => f.id !== Number(currentUserId)
+          ),
+        }));
+        
       } else {
         console.error("Unfollow thất bại:", response.data);
       }
@@ -114,6 +137,7 @@ const ProfilePage = () => {
       console.error("Lỗi khi unfollow:", err);
     }
   };
+  
 
   useEffect(() => {
     if (!socket) return;
@@ -189,9 +213,18 @@ const ProfilePage = () => {
             {followStatus === "Theo dõi" && (
               <button
                 onClick={() => handleFollow(Number(userId))}
-                className="text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded-lg text-sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
               >
                 Theo dõi
+              </button>
+            )}
+
+            {followStatus === "Theo dõi lại" && (
+              <button
+                onClick={() => handleFollow(Number(userId))}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
+              >
+                Theo dõi lại
               </button>
             )}
 
@@ -199,13 +232,13 @@ const ProfilePage = () => {
               <>
                 <button
                   onClick={() => handleUnfollow(Number(userId))}
-                  className="text-white bg-gray-500 hover:bg-gray-600 px-5 py-2 rounded-lg text-sm"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg text-sm mr-2"
                 >
                   Bỏ theo dõi
                 </button>
                 <button
                   onClick={() => handleClickUser(Number(userId))}
-                  className="text-white bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg text-sm"
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-lg text-sm"
                 >
                   Nhắn tin
                 </button>

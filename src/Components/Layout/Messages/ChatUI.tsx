@@ -52,7 +52,7 @@ const ChatPage = ({ theme }: { theme: string }) => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await axios.get(
+        const res = await axiosInstance.get(
           "https://api-linkup.id.vn/api/texting/getMessenger",
           {
             headers: {
@@ -71,6 +71,9 @@ const ChatPage = ({ theme }: { theme: string }) => {
     fetchConversations();
   }, []);
 
+  console.log("data: ",conversations)
+
+
   const loadConversation = async (userId: string) => {
     try {
       const res = await axiosInstance.get(
@@ -88,47 +91,36 @@ const ChatPage = ({ theme }: { theme: string }) => {
         setMessages(messageList);
         setIsChatOpen(true);
   
+        let targetUserId = Number(userId);
         if (messageList.length > 0) {
           const msg = messageList[0];
-          if (msg.senderId !== currentUserId) {
-            setOtherUser(msg.sender); // sender là người còn lại
-          }
+          targetUserId =
+            msg.senderId !== currentUserId ? msg.senderId : msg.receiverId;
+        }
+  
+        // Kiểm tra người dùng có trong danh sách hội thoại không
+        const found = conversations.find((c) => c.user.id === targetUserId);
+        if (found) {
+          setOtherUser(found.user);
         } else {
-          // Nếu chưa có tin nhắn, tạo cuộc trò chuyện rỗng
-          const found = conversations.find(
-            (c) => c.user.id.toString() === userId
+          const userRes = await axiosInstance.get(
+            `https://api-linkup.id.vn/api/auth/profile?userId=${targetUserId}`
           );
   
-          if (found) {
-            setOtherUser(found.user);
-          } else {
-            // Nếu chưa nằm trong danh sách hội thoại -> gọi API lấy thông tin user
-            const userRes = await axiosInstance.get(
-              `https://api-linkup.id.vn/api/auth/profile?userId=${userId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-                },
-              }
-            );
-  
-            if (userRes.data.isSuccess) {
-              setOtherUser({
-                id: userRes.data.UserId,
-                username: userRes.data.username,
-                avatar: userRes.data.avatar
-              });
-            }
+          if (userRes.data.isSuccess) {
+            setOtherUser({
+              id: userRes.data.UserId,
+              username: userRes.data.username,
+              avatar: userRes.data.avatar,
+            });
           }
-  
-          // Tạo danh sách tin nhắn rỗng
-          setMessages([]);
         }
       }
     } catch (err) {
       console.error("Lỗi khi lấy chi tiết tin nhắn:", err);
     }
   };
+  
   
 
   const sendMessage = () => {
