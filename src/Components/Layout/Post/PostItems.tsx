@@ -137,7 +137,9 @@ const PostItem: React.FC<{ post: PostProps }> = ({ post }) => {
       {/* Bài đăng */}
       <div
         className={`text-white mt-5 max-w-4xl mx-auto rounded-xl p-4 ${
-          theme === "dark" ? "bg-[#252728]" : "bg-white"
+          theme === "dark"
+            ? "bg-[#252728]"
+            : "bg-white shadow-md border border-gray-200"
         }`}
       >
         <div className="flex items-center justify-between mb-4">

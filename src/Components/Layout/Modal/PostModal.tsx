@@ -263,6 +263,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
                   alt="Preview"
                   style={{ 
                     width: "100%", 
+                    maxWidth: "500px",
                     maxHeight: "300px", 
                     objectFit: "contain", 
                     borderRadius: "8px"
@@ -291,6 +292,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, refreshPosts }) 
                   controls
                   style={{ 
                     width: "100%", 
+                    maxWidth: "500px",
                     maxHeight: "300px", 
                     borderRadius: "8px" 
                   }}

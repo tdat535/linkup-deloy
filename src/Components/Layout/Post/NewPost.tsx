@@ -23,7 +23,7 @@ const NewPost = ({ refreshPosts }: { refreshPosts: () => void }) => {
 
   return (
     <>
-      <div className={`max-w-4xl  mx-auto rounded-xl p-5 relative top-2.5 ${theme === 'dark' ? 'bg-[#252728] text-white' : 'bg-white text-black'}`}>
+      <div className={`max-w-4xl  mx-auto rounded-xl p-5 relative top-2.5 ${theme === 'dark' ? 'bg-[#252728] text-white' : 'bg-white text-black shadow-md border border-gray-200'}`}>
         <div className="flex items-center">
           <img
             src={avatar}

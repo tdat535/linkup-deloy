@@ -22,6 +22,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@types/react-leaflet": "^2.8.3",
     "axios": "^1.8.4",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/date-fns": "^2.5.3",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22.13.9",
     "@types/react": "^18.3.18",

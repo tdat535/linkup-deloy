@@ -88,7 +88,7 @@ const Sidebar = () => {
         sx={{
           display: { xs: 'none', md: 'block' },
           '& .MuiDrawer-paper': {
-            width: 240,
+            width: 260,
             boxSizing: 'border-box',
             border: 'none',
             borderRight: 1,
