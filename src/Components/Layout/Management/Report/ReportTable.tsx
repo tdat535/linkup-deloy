@@ -63,7 +63,7 @@ const ReportTable: React.FC = () => {
     const fetchReports = async () => {
       try {
         const res = await axiosInstance.get(
-          "http://192.168.5.54:4000/api/admin/getReport",
+          "https://api-linkup.id.vn/api/admin/getReport",
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -229,7 +229,7 @@ const ReportTable: React.FC = () => {
       if (!token) throw new Error("Token không hợp lệ");
 
       const response = await axiosInstance.put(
-        `http://192.168.5.54:4000/api/report/resolvePost/${postId}`,
+        `https://api-linkup.id.vn/api/report/resolvePost/${postId}`,
         { action },
         {
           headers: { Authorization: `Bearer ${token}` },
