@@ -13,7 +13,11 @@ import axios from "axios";
 import React from "react";
 import axiosInstance from "../../TokenRefresher";
 
-const FollowSidebar = () => {
+interface FollowSidebarProps {
+  onReady?: () => void;
+}
+
+const FollowSidebar: React.FC<FollowSidebarProps> = ({ onReady }) => {
   const [user, setUser] = useState<{
     username: string;
     email: string;
