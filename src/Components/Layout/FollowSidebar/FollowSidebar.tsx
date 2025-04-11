@@ -5,11 +5,12 @@ import { FiChevronDown, FiLogOut, FiSun, FiMoon, FiSettings } from "react-icons/
 import { useTheme } from "../../../context/ThemeContext";
 import axios from "axios";
 import React from "react";
+import axiosInstance from "Components/TokenRefresher";
 
 const FollowSidebar = () => {
     const [user, setUser] = useState<{ username: string, email: string, phonenumber: string, avatar?: string } | null>(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-    const [avatar, setAvatar] = useState("https://via.placeholder.com/80");
+    const [avatar, setAvatar] = useState("");
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
@@ -29,7 +30,7 @@ const FollowSidebar = () => {
         const fetchFollowings = async () => {
             try {
                 const accessToken = localStorage.getItem("accessToken");
-                const res = await axios.get("https://api-linkup.id.vn/api/follow/getFollow", {
+                const res = await axiosInstance.get("https://api-linkup.id.vn/api/follow/getFollow", {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                     },

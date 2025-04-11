@@ -60,7 +60,7 @@ const ChatPage = () => {
     const fetchConversations = async () => {
       try {
         setIsLoading(true);
-        const res = await axios.get(
+        const res = await axiosInstance.get(
           "https://api-linkup.id.vn/api/texting/getMessenger",
           {
             headers: {

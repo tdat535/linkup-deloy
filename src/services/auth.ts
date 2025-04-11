@@ -1,5 +1,6 @@
 // src/services/auth.ts
 import axios from 'axios';
+import axiosInstance from 'Components/TokenRefresher';
 
 const API_URL = 'https://api-linkup.id.vn/api';
 
@@ -68,12 +69,27 @@ export const refreshToken = async (): Promise<boolean> => {
 };
 
 // Logout function
-export const logout = (): void => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('user');
-  localStorage.removeItem('currentUserId');
-  window.location.href = '/login';
+export const logout = async (): Promise<void> => {
+  try {
+    await axiosInstance.post('https://api-linkup.id.vn/api/auth/logout', null, {
+      withCredentials: true, // 👈 để gửi cookie
+    });
+
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('currentUserId');
+
+    window.location.href = '/login';
+  } catch (error) {
+    console.error("Logout failed", error);
+
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('currentUserId');
+    window.location.href = '/login';
+  }
 };
 
 export default {
