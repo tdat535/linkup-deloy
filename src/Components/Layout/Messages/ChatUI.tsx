@@ -21,6 +21,7 @@ const ChatPage = () => {
   const currentUserId = Number(localStorage.getItem("currentUserId"));
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const messageContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Use theme context
   const { theme, toggleTheme } = useAppTheme();
@@ -141,7 +142,6 @@ const ChatPage = () => {
     }
   };
   
-
   const sendMessage = () => {
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   
@@ -204,7 +204,7 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full overflow-hidden">
       {/* Sidebar trái */}
       <aside
         className={`fixed inset-0 md:relative md:inset-auto ${
@@ -304,13 +304,13 @@ const ChatPage = () => {
 
       {/* Chi tiết chat */}
       <div
-        className={`flex-1 flex flex-col h-full ${
+        className={`flex-1 flex flex-col h-full relative w-full ${
           !isChatOpen ? "hidden md:flex" : ""
         }`}
       >
         {/* Header */}
         <div
-          className={`p-4 border-b sticky top-0 left-0 right-0 z-20 flex items-center justify-between ${
+          className={`p-4 border-b flex items-center justify-between sticky top-0 z-20 ${
             isDarkMode
               ? "bg-[#1C1C1D] text-white border-gray-700"
               : "bg-white text-gray-800 border-gray-200"
@@ -349,136 +349,140 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Nội dung tin nhắn */}
-        <div
-          className={`flex-1 overflow-y-auto p-4 space-y-2 ${
-            isDarkMode
-              ? "bg-[#1C1C1D] text-white"
-              : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {isLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <MessageSquare size={48} className={isDarkMode ? "text-gray-600" : "text-gray-400"} />
-              <p className={`mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                {otherUser ? "Hãy bắt đầu cuộc trò chuyện" : "Chọn một người để trò chuyện"}
-              </p>
-            </div>
-          ) : (
-            <>
-              {messages.map((msg, index) => {
-                const isCurrentUser = msg.senderId === currentUserId;
-                const showAvatar = index === 0 ||
-                    messages[index - 1].senderId !== msg.senderId;
+        {/* Chat container with fixed height to prevent overflow issues */}
+        <div className="flex flex-col h-[calc(100vh-128px)] md:h-[calc(100%-104px)]">
+          {/* Nội dung tin nhắn */}
+          <div
+            ref={messageContainerRef}
+            className={`flex-1 overflow-y-auto p-4 space-y-2 ${
+              isDarkMode
+                ? "bg-[#1C1C1D] text-white"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full">
+                <MessageSquare size={48} className={isDarkMode ? "text-gray-600" : "text-gray-400"} />
+                <p className={`mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                  {otherUser ? "Hãy bắt đầu cuộc trò chuyện" : "Chọn một người để trò chuyện"}
+                </p>
+              </div>
+            ) : (
+              <>
+                {messages.map((msg, index) => {
+                  const isCurrentUser = msg.senderId === currentUserId;
+                  const showAvatar = index === 0 ||
+                      messages[index - 1].senderId !== msg.senderId;
 
-                return (
-                  <div
-                    key={index}
-                    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} items-end gap-2`}
-                  >
-                    {!isCurrentUser && showAvatar && (
-                      <img
-                        className="w-8 h-8 rounded-full object-cover mb-1"
-                        src={msg.sender?.avatar || "/default-avatar.jpg"}
-                        alt="Avatar"
-                      />
-                    )}
-                    {!isCurrentUser && !showAvatar && (
-                      <div className="w-8"></div>
-                    )}
+                  return (
                     <div
-                      className={`break-all whitespace-pre-wrap max-w-[75%] p-3 rounded-2xl ${
-                        isCurrentUser
-                          ? `${isDarkMode ? "bg-blue-600" : "bg-blue-500"} text-white rounded-br-none`
-                          : isDarkMode
-                              ? "bg-gray-800 text-white rounded-bl-none"
-                              : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
-                      }`}
+                      key={index}
+                      className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} items-end gap-2`}
                     >
-                      {msg.content}
-                      <div className={`text-right mt-1 text-xs ${
-                        isCurrentUser
-                          ? "text-blue-200"
-                          : isDarkMode ? "text-gray-400" : "text-gray-500"
-                      }`}>
-                        {formatTime(msg.createdAt)}
+                      {!isCurrentUser && showAvatar && (
+                        <img
+                          className="w-8 h-8 rounded-full object-cover mb-1"
+                          src={msg.sender?.avatar || "/default-avatar.jpg"}
+                          alt="Avatar"
+                        />
+                      )}
+                      {!isCurrentUser && !showAvatar && (
+                        <div className="w-8"></div>
+                      )}
+                      <div
+                        className={`break-all whitespace-pre-wrap max-w-[75%] p-3 rounded-2xl ${
+                          isCurrentUser
+                            ? `${isDarkMode ? "bg-blue-600" : "bg-blue-500"} text-white rounded-br-none`
+                            : isDarkMode
+                                ? "bg-gray-800 text-white rounded-bl-none"
+                                : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
+                        }`}
+                      >
+                        {msg.content}
+                        <div className={`text-right mt-1 text-xs ${
+                          isCurrentUser
+                            ? "text-blue-200"
+                            : isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}>
+                          {formatTime(msg.createdAt)}
+                        </div>
                       </div>
+                      {isCurrentUser && showAvatar && (
+                        <img
+                          className="w-8 h-8 rounded-full object-cover mb-1"
+                          src={JSON.parse(localStorage.getItem("user") || "{}").avatar || "/default-avatar.jpg"}
+                          alt="Avatar"
+                        />
+                      )}
+                      {isCurrentUser && !showAvatar && (
+                        <div className="w-8"></div>
+                      )}
                     </div>
-                    {isCurrentUser && showAvatar && (
-                      <img
-                        className="w-8 h-8 rounded-full object-cover mb-1"
-                        src={JSON.parse(localStorage.getItem("user") || "{}").avatar || "/default-avatar.jpg"}
-                        alt="Avatar"
-                      />
-                    )}
-                    {isCurrentUser && !showAvatar && (
-                      <div className="w-8"></div>
-                    )}
-                  </div>
-                );
-              })}
-              <div ref={bottomRef} />
-            </>
-          )}
-        </div>
+                  );
+                })}
+                <div ref={bottomRef} />
+              </>
+            )}
+          </div>
 
-        {/* Nhập tin nhắn */}
-        <div
-          className={`p-3 shadow-lg sticky bottom-0 left-0 right-0 ${
-            isDarkMode
-              ? "bg-[#1C1C1D] text-white border-t border-gray-700"
-              : "bg-white border-t border-gray-200 text-gray-800"
-          }`}
-        >
-          <div className={`flex items-center p-1 rounded-full ${
-            isDarkMode ? "bg-gray-800" : "bg-gray-100"
-          }`}>
-            <button className={`p-2 rounded-full ${
-              isDarkMode ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-200 text-gray-600"
+          {/* Nhập tin nhắn - Part of fixed layout */}
+          <div
+            className={`bottom-0 left-0 right-0 p-3 ${
+              isDarkMode
+                ? "bg-[#1C1C1D] text-white border-t border-gray-700"
+                : "bg-white border-t border-gray-200 text-gray-800"
+            }`}
+          >
+            <div className={`flex items-center p-1 rounded-full ${
+              isDarkMode ? "bg-gray-800" : "bg-gray-100"
             }`}>
-              <Paperclip size={20} />
-            </button>
-            <button className={`p-2 rounded-full ${
-              isDarkMode ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-200 text-gray-600"
-            }`}>
-              <Image size={20} />
-            </button>
-            <TextareaAutosize
-              className={`w-full p-2 mx-2 bg-transparent resize-none focus:outline-none ${
-                isDarkMode ? "text-white placeholder-gray-400" : "text-gray-800 placeholder-gray-500"
-              }`}
-              minRows={1}
-              maxRows={4}
-              placeholder="Nhập tin nhắn..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-            />
-            <button className={`p-2 rounded-full ${
-              isDarkMode ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-200 text-gray-600"
-            }`}>
-              <Smile size={20} />
-            </button>
-            <button
-              className={`p-2 rounded-full ${
-                input.trim()
-                  ? "bg-blue-500 text-white hover:bg-blue-600"
-                  : isDarkMode ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-500"
-              }`}
-              onClick={sendMessage}
-              disabled={!input.trim()}
-            >
-              <Send size={20} />
-            </button>
+              <button className={`p-2 rounded-full ${
+                isDarkMode ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-200 text-gray-600"
+              }`}>
+                <Paperclip size={20} />
+              </button>
+              <button className={`p-2 rounded-full ${
+                isDarkMode ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-200 text-gray-600"
+              }`}>
+                <Image size={20} />
+              </button>
+              <TextareaAutosize
+                className={`w-full p-2 mx-2 bg-transparent resize-none focus:outline-none ${
+                  isDarkMode ? "text-white placeholder-gray-400" : "text-gray-800 placeholder-gray-500"
+                }`}
+                minRows={1}
+                maxRows={4}
+                placeholder="Nhập tin nhắn..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+              />
+              <button className={`p-2 rounded-full ${
+                isDarkMode ? "hover:bg-gray-700 text-gray-300" : "hover:bg-gray-200 text-gray-600"
+              }`}>
+                <Smile size={20} />
+              </button>
+              <button
+                className={`p-2 rounded-full ${
+                  input.trim()
+                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                    : isDarkMode ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-500"
+                }`}
+                onClick={sendMessage}
+                disabled={!input.trim()}
+              >
+                <Send size={20} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
