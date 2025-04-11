@@ -122,6 +122,7 @@ const ChatPage = () => {
               id: userRes.data.UserId,
               username: userRes.data.username,
               avatar: userRes.data.avatar,
+              isOnline: false, // Default value for isOnline
             });
           }
         }
