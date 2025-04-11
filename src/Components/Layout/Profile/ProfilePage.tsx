@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 import { useTheme } from "../../../context/ThemeContext";
 import { useSocket } from "../../../context/SocketContext";
@@ -14,7 +14,7 @@ const ProfilePage = () => {
 
   const [user, setUser] = useState<any>(null);
   const [profileData, setProfileData] = useState<any>(null);
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [followStatus, setFollowStatus] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -43,7 +43,7 @@ const ProfilePage = () => {
     const fetchProfile = async () => {
       try {
         const response = await axiosInstance.get(
-          `https://api-linkup.id.vn/api/auth/profile?userId=${userId}&currentUserId=${currentUserId}`,
+          `https://api-linkup.id.vn/api/auth/profile?userId=${userId}`,
           {
             headers: { Authorization: `Bearer ${accessToken}` },
           }
@@ -56,13 +56,7 @@ const ProfilePage = () => {
           setName(data.username || "");
           setBio(data.bio || "");
           setAvatar(data.avatar || "/assets/default-avatar.png");
-
-          setIsFollowing(
-            Array.isArray(data.followers) &&
-              data.followers.some(
-                (f: { UserId: number }) => f.UserId === Number(currentUserId)
-              )
-          );
+          setFollowStatus(data.followStatus || ""); // 👈 Cập nhật followStatus
         } else {
           setError("Không tìm thấy người dùng.");
         }
@@ -87,9 +81,7 @@ const ProfilePage = () => {
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
-      if (response.data?.isSuccess) {
-        setIsFollowing(true);
-
+      if (response.data?.isSuccess) { 
         if (socket) {
           socket.emit("follow", {
             followerId: Number(currentUserId),
@@ -104,26 +96,50 @@ const ProfilePage = () => {
     }
   };
 
+  const handleUnfollow = async (userId: number) => {
+    try {
+      const response = await axiosInstance.delete(
+        `https://api-linkup.id.vn/api/follow/deleteFollow?followingId=${userId}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      if (response.data?.isSuccess) {
+        setFollowStatus("Theo dõi");
+      } else {
+        console.error("Unfollow thất bại:", response.data);
+      }
+    } catch (err) {
+      console.error("Lỗi khi unfollow:", err);
+    }
+  };
+
   useEffect(() => {
     if (!socket) return;
-  
+
     const handleFollowNotification = (data: any) => {
       console.log("📢 Có người vừa follow bạn:", data);
       alert(`🔔 ${data.follower?.username} vừa theo dõi bạn!`);
-  
+
       setProfileData((prev: any) => ({
         ...prev,
         followers: [...(prev?.followers || []), { UserId: data.followerId }],
       }));
     };
-  
+
     socket.on("followNotification", handleFollowNotification);
-  
+
     return () => {
       socket.off("followNotification", handleFollowNotification);
     };
   }, [socket]); // ✅ Phụ thuộc socket
-  
+
+  const navigate = useNavigate();
+
+  const handleClickUser = (userId: number) => {
+    navigate("/home/messages", { state: { userId } });
+  };
 
   if (loading) {
     return (
@@ -169,25 +185,33 @@ const ProfilePage = () => {
           </div>
         </div>
         <div>
-          {currentUserId === userId ? (
-            <button
-              onClick={() => setOpenModal(true)}
-              className="text-white bg-blue-700 hover:bg-blue-800 px-5 py-2 rounded-lg text-sm"
-            >
-              Chỉnh sửa hồ sơ
-            </button>
-          ) : (
-            <button
-              onClick={() => handleFollow(Number(userId))}
-              className={`text-white px-5 py-2 rounded-lg text-sm ${
-                isFollowing
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-green-700 hover:bg-green-800"
-              }`}
-            >
-              {isFollowing ? "Đã theo dõi" : "Follow"}
-            </button>
-          )}
+          <div className="flex gap-2">
+            {followStatus === "Theo dõi" && (
+              <button
+                onClick={() => handleFollow(Number(userId))}
+                className="text-white bg-green-700 hover:bg-green-800 px-5 py-2 rounded-lg text-sm"
+              >
+                Theo dõi
+              </button>
+            )}
+
+            {followStatus === "Đang theo dõi" && (
+              <>
+                <button
+                  onClick={() => handleUnfollow(Number(userId))}
+                  className="text-white bg-gray-500 hover:bg-gray-600 px-5 py-2 rounded-lg text-sm"
+                >
+                  Bỏ theo dõi
+                </button>
+                <button
+                  onClick={() => handleClickUser(Number(userId))}
+                  className="text-white bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg text-sm"
+                >
+                  Nhắn tin
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
