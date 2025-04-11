@@ -88,7 +88,7 @@ const Sidebar = () => {
         sx={{
           display: { xs: 'none', md: 'block' },
           '& .MuiDrawer-paper': {
-            width: 280,
+            width: 260,
             boxSizing: 'border-box',
             border: 'none',
             borderRight: 1,
@@ -101,9 +101,11 @@ const Sidebar = () => {
         open
       >
         <Box sx={{ p: 3 }}>
-          <Typography variant="h4" fontWeight="bold" sx={{ mb: 4, fontFamily: 'cursive', color: isDarkMode ? '#fff' : '#000' }}>
-            𝓛𝓲𝓷𝓴𝓤𝓹
-          </Typography>
+          <Link to="/home" style={{ textDecoration: 'none' }}>
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 4, fontFamily: 'cursive', color: isDarkMode ? '#fff' : '#000', cursor: 'pointer' }}>
+              𝓛𝓲𝓷𝓴𝓤𝓹
+            </Typography>
+          </Link>
 
           <List sx={{ width: '100%' }}>
             {menuItems.map((item) => (

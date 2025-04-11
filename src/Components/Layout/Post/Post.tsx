@@ -4,7 +4,7 @@
 import React from "react";
 
 const Post = () => (
-  <div className="bg-[#080A0B] text-white shadow-md p-4 border-b border-gray-400">
+  <div className="bg-[#080A0B] text-white shadow-md p-4 border-b border-gray-400 rounded-lg">
     <div className="flex items-center mb-4">
       <img src="https://media.tenor.com/9vTAoKqOXPQAAAAM/shrek-shrek-meme.gif" alt="Avatar" className="w-10 h-10 rounded-full mr-2 object-cover" />
       <div>
