@@ -395,7 +395,7 @@ const PostTable: React.FC = () => {
         if (!token) throw new Error("Token không hợp lệ");
 
         const response = await axiosInstance.put(
-          `https://api-linkup.id.vn/api/media/hidePost/${postId}`,
+          `https://api-linkup.id.vn/api/admin/hidePost/${postId}`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -447,7 +447,7 @@ const PostTable: React.FC = () => {
         if (!token) throw new Error("Token không hợp lệ");
 
         const response = await axiosInstance.put(
-          `https://api-linkup.id.vn/api/media/unHidePost/${postId}`,
+          `https://api-linkup.id.vn/api/admin/unHidePost/${postId}`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },

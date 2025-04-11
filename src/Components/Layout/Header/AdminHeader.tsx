@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Avatar, 
   IconButton, 
@@ -29,6 +29,20 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ toggleMobileSidebar }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   
+  const [user, setUser] = useState<{ 
+    username: string, 
+    email: string, 
+    avatar : string
+   } | null>(null); // Thông tin người dùng
+
+   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      setUser(parsed);
+    }
+  }, []);
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -103,7 +117,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ toggleMobileSidebar }) => {
                 height: isMobile ? 32 : 40 
               }}
               alt="Admin User"
-              src="/path-to-avatar-image.jpg" // Replace with actual avatar path
+              src={user?.avatar} // Replace with actual avatar path
             />
           </IconButton>
           
@@ -133,10 +147,10 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ toggleMobileSidebar }) => {
           >
             <Box sx={{ px: 2, py: 1 }}>
               <Typography variant="subtitle1" component="div" sx={{ fontWeight: "bold" }}>
-                Admin User
+                {user?.username}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ color: theme === "dark" ? "gray" : "inherit" }}>
-                admin@example.com
+              {user?.email}
               </Typography>
             </Box>
             

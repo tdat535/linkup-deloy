@@ -4,6 +4,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from './routes/routes';
 import { ThemeProvider } from './context/ThemeContext';
 import { SocketProvider } from './context/SocketContext'; // 👈 thêm dòng này
+import { UserProvider } from './context/UserContext';
 
 const App: React.FC = () => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('accessToken'));
@@ -19,10 +20,12 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
-      <SocketProvider> {/* 👈 Bao quanh toàn bộ app */}
+      <SocketProvider> 
+      <UserProvider>
         <Router>
           <AppRoutes token={token} />
         </Router>
+        </UserProvider>
       </SocketProvider>
     </ThemeProvider>
   );

@@ -22,10 +22,13 @@ const Home: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const userId = localStorage.getItem("currentUserId");
+      const url = `https://api-linkup.id.vn/api/media/getPost?${userId}`
+      console.log("url: ", url)
+
       if (!token || !userId) return;
 
       const response = await axiosInstance.get(
-        `https://api-linkup.id.vn/api/media/getPost?${userId}`,
+        url,
         {
           headers: {
             Authorization: `Bearer ${token}`,

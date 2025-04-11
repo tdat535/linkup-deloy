@@ -1,33 +1,33 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Box, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Drawer, 
-  useTheme, 
-  alpha, 
-  Paper, 
-  Menu, 
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Button,
+  IconButton,
+  Drawer,
+  useTheme,
+  alpha,
+  Paper,
+  Menu,
   MenuItem,
-  Divider
+  Divider,
 } from "@mui/material";
-import { 
-  Home, 
-  Search, 
-  MessageSquare, 
-  Bell, 
-  User, 
-  MoreHorizontal, 
-  Sun, 
-  Moon, 
-  Plus, 
-  Settings 
+import {
+  Home,
+  Search,
+  MessageSquare,
+  Bell,
+  User,
+  MoreHorizontal,
+  Sun,
+  Moon,
+  Plus,
+  Settings,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import PostModal from "../Modal/PostModal";
@@ -39,20 +39,28 @@ const Sidebar = () => {
   const { theme: appTheme, toggleTheme } = useAppTheme();
   const [isBottomNavVisible] = useState(true);
   const currentUserId = localStorage.getItem("currentUserId") || "default-id";
-  const profileUrl = currentUserId !== "default-id" ? `/home/profile?userId=${currentUserId}` : "/login";
-  
+  const profileUrl =
+    currentUserId !== "default-id"
+      ? `/home/profile?userId=${currentUserId}`
+      : "/login";
+
   // MUI theme
   const muiTheme = useTheme();
   const location = useLocation();
 
   // Menu items configuration
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = user?.userType === "admin";
+
   const menuItems = [
     { path: "/home", icon: <Home />, text: "Trang chủ" },
     { path: "/home/search", icon: <Search />, text: "Khám phá" },
     { path: "/home/messages", icon: <MessageSquare />, text: "Tin nhắn" },
     { path: "/home/notifications", icon: <Bell />, text: "Thông báo" },
     { path: profileUrl, icon: <User />, text: "Trang cá nhân" },
-    { path: "/admin", icon: <Settings />, text: "Đến trang admin" }
+    ...(isAdmin
+      ? [{ path: "/admin", icon: <Settings />, text: "Đến trang admin" }]
+      : []),
   ];
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -65,20 +73,22 @@ const Sidebar = () => {
 
   // Check if a menu item is active
   const isActive = (path: string) => {
-    return location.pathname === path || 
-           (path !== "/home" && location.pathname.startsWith(path));
+    return (
+      location.pathname === path ||
+      (path !== "/home" && location.pathname.startsWith(path))
+    );
   };
 
   // Colors for active and hover states
   const isDarkMode = appTheme === "dark";
-  const activeBackgroundColor = isDarkMode 
-    ? alpha(muiTheme.palette.primary.main, 0.2) 
+  const activeBackgroundColor = isDarkMode
+    ? alpha(muiTheme.palette.primary.main, 0.2)
     : alpha(muiTheme.palette.primary.main, 0.1);
-  const hoverBackgroundColor = isDarkMode 
-    ? alpha(muiTheme.palette.primary.main, 0.1) 
+  const hoverBackgroundColor = isDarkMode
+    ? alpha(muiTheme.palette.primary.main, 0.1)
     : alpha(muiTheme.palette.primary.main, 0.05);
   const activeTextColor = muiTheme.palette.primary.main;
-  const normalTextColor = isDarkMode ? '#fff' : '#000';
+  const normalTextColor = isDarkMode ? "#fff" : "#000";
 
   return (
     <>
@@ -86,28 +96,37 @@ const Sidebar = () => {
       <Drawer
         variant="permanent"
         sx={{
-          display: { xs: 'none', md: 'block' },
-          '& .MuiDrawer-paper': {
+          display: { xs: "none", md: "block" },
+          "& .MuiDrawer-paper": {
             width: 260,
-            boxSizing: 'border-box',
-            border: 'none',
+            boxSizing: "border-box",
+            border: "none",
             borderRight: 1,
-            borderColor: isDarkMode ? 'grey.800' : 'grey.200',
-            backgroundColor: isDarkMode ? '#1C1C1D' : '#f0f2f5',
-            color: isDarkMode ? '#fff' : '#000',
-            overflow: 'hidden'
+            borderColor: isDarkMode ? "grey.800" : "grey.200",
+            backgroundColor: isDarkMode ? "#1C1C1D" : "#f0f2f5",
+            color: isDarkMode ? "#fff" : "#000",
+            overflow: "hidden",
           },
         }}
         open
       >
         <Box sx={{ p: 3 }}>
-          <Link to="/home" style={{ textDecoration: 'none' }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ mb: 4, fontFamily: 'cursive', color: isDarkMode ? '#fff' : '#000', cursor: 'pointer' }}>
+          <Link to="/home" style={{ textDecoration: "none" }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{
+                mb: 4,
+                fontFamily: "cursive",
+                color: isDarkMode ? "#fff" : "#000",
+                cursor: "pointer",
+              }}
+            >
               𝓛𝓲𝓷𝓴𝓤𝓹
             </Typography>
           </Link>
 
-          <List sx={{ width: '100%' }}>
+          <List sx={{ width: "100%" }}>
             {menuItems.map((item) => (
               <ListItem
                 key={item.path}
@@ -117,31 +136,43 @@ const Sidebar = () => {
                 sx={{
                   mb: 1,
                   borderRadius: 2,
-                  backgroundColor: isActive(item.path) ? activeBackgroundColor : 'transparent',
-                  '&:hover': {
+                  backgroundColor: isActive(item.path)
+                    ? activeBackgroundColor
+                    : "transparent",
+                  "&:hover": {
                     backgroundColor: hoverBackgroundColor,
-                    transition: 'background-color 0.3s ease'
+                    transition: "background-color 0.3s ease",
                   },
-                  transition: 'all 0.2s ease',
-                  textDecoration: 'none'
+                  transition: "all 0.2s ease",
+                  textDecoration: "none",
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', py: 1.5, px: 2, width: '100%' }}>
-                  <ListItemIcon 
-                    sx={{ 
-                      minWidth: 40, 
-                      color: isActive(item.path) ? activeTextColor : normalTextColor
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    py: 1.5,
+                    px: 2,
+                    width: "100%",
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 40,
+                      color: isActive(item.path)
+                        ? activeTextColor
+                        : normalTextColor,
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
-                  <ListItemText 
-                    primary={item.text} 
-                    primaryTypographyProps={{ 
-                      fontSize: '1rem',
-                      fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                      color: isActive(item.path) ? activeTextColor : 'inherit'
-                    }} 
+                  <ListItemText
+                    primary={item.text}
+                    primaryTypographyProps={{
+                      fontSize: "1rem",
+                      fontWeight: isActive(item.path) ? "bold" : "normal",
+                      color: isActive(item.path) ? activeTextColor : "inherit",
+                    }}
                   />
                 </Box>
               </ListItem>
@@ -152,14 +183,21 @@ const Sidebar = () => {
               sx={{
                 mb: 1,
                 borderRadius: 2,
-                '&:hover': {
+                "&:hover": {
                   backgroundColor: hoverBackgroundColor,
-                  transition: 'background-color 0.3s ease'
+                  transition: "background-color 0.3s ease",
                 },
               }}
             >
-              <Box 
-                sx={{ display: 'flex', alignItems: 'center', py: 1.5, px: 2, width: '100%', cursor: 'pointer' }}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  py: 1.5,
+                  px: 2,
+                  width: "100%",
+                  cursor: "pointer",
+                }}
                 onClick={handleOpenMenu}
               >
                 <ListItemIcon sx={{ minWidth: 40, color: normalTextColor }}>
@@ -174,23 +212,34 @@ const Sidebar = () => {
             anchorEl={menuAnchorEl}
             open={Boolean(menuAnchorEl)}
             onClose={handleCloseMenu}
-            transformOrigin={{ horizontal: 'left', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+            transformOrigin={{ horizontal: "left", vertical: "top" }}
+            anchorOrigin={{ horizontal: "right", vertical: "top" }}
             PaperProps={{
               sx: {
                 mt: 1.5,
-                backgroundColor: isDarkMode ? 'neutral.800' : 'neutral.100',
+                backgroundColor: isDarkMode ? "neutral.800" : "neutral.100",
                 boxShadow: 3,
                 borderRadius: 2,
-                minWidth: 180
-              }
+                minWidth: 180,
+              },
             }}
           >
-            <MenuItem onClick={() => { toggleTheme(); handleCloseMenu(); }}>
+            <MenuItem
+              onClick={() => {
+                toggleTheme();
+                handleCloseMenu();
+              }}
+            >
               <ListItemIcon>
-                {isDarkMode ? <Sun fontSize="small" /> : <Moon fontSize="small" />}
+                {isDarkMode ? (
+                  <Sun fontSize="small" />
+                ) : (
+                  <Moon fontSize="small" />
+                )}
               </ListItemIcon>
-              <ListItemText primary={isDarkMode ? "Chế độ sáng" : "Chế độ tối"} />
+              <ListItemText
+                primary={isDarkMode ? "Chế độ sáng" : "Chế độ tối"}
+              />
             </MenuItem>
           </Menu>
 
@@ -203,9 +252,9 @@ const Sidebar = () => {
               sx={{
                 py: 1.5,
                 borderRadius: 2,
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 'bold'
+                textTransform: "none",
+                fontSize: "1rem",
+                fontWeight: "bold",
               }}
             >
               Đăng
@@ -222,18 +271,18 @@ const Sidebar = () => {
         transition={{ duration: 0.3 }}
         elevation={3}
         sx={{
-          display: { xs: 'flex', md: 'none' },
-          position: 'fixed',
+          display: { xs: "flex", md: "none" },
+          position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
           zIndex: 1000,
           borderTop: 1,
-          borderColor: isDarkMode ? 'grey.800' : 'grey.200',
-          backgroundColor: isDarkMode ? '#1C1C1D' : '#fff',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-          py: 0.5
+          borderColor: isDarkMode ? "grey.800" : "grey.200",
+          backgroundColor: isDarkMode ? "#1C1C1D" : "#fff",
+          justifyContent: "space-around",
+          alignItems: "center",
+          py: 0.5,
         }}
       >
         {menuItems.slice(0, 5).map((item) => (
@@ -242,9 +291,13 @@ const Sidebar = () => {
             component={Link}
             to={item.path}
             sx={{
-              color: isActive(item.path) ? activeTextColor : (isDarkMode ? 'grey.400' : 'grey.600'),
+              color: isActive(item.path)
+                ? activeTextColor
+                : isDarkMode
+                ? "grey.400"
+                : "grey.600",
               p: 1.5,
-              transition: 'all 0.2s ease'
+              transition: "all 0.2s ease",
             }}
           >
             {item.icon}
@@ -255,13 +308,13 @@ const Sidebar = () => {
           onClick={() => setIsOpen(true)}
           sx={{
             p: 1,
-            backgroundColor: 'primary.main',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
+            backgroundColor: "primary.main",
+            color: "white",
+            "&:hover": {
+              backgroundColor: "primary.dark",
             },
             boxShadow: 2,
-            borderRadius: '50%'
+            borderRadius: "50%",
           }}
         >
           <Plus size={22} />
@@ -269,9 +322,15 @@ const Sidebar = () => {
       </Paper>
 
       {/* Post Modal */}
-      {isOpen && <PostModal isOpen={isOpen} onClose={() => setIsOpen(false)} refreshPosts={function (): void {
-        throw new Error("Function not implemented.");
-      } } />}
+      {isOpen && (
+        <PostModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          refreshPosts={function (): void {
+            throw new Error("Function not implemented.");
+          }}
+        />
+      )}
     </>
   );
 };

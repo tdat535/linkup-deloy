@@ -9,15 +9,17 @@ import {
   Tab,
   useMediaQuery,
   useTheme as useMuiTheme,
-  Button,
   IconButton,
-  Avatar,
   DialogContent,
   DialogActions,
   Dialog,
   DialogTitle,
 } from "@mui/material";
-import { Visibility as VisibilityIcon } from "@mui/icons-material";
+import {
+  Visibility as VisibilityIcon,
+  LockOpen as LockOpenIcon,
+  LockOutlined as LockOutlineIcon,
+} from "@mui/icons-material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import axiosInstance from "../../../TokenRefresher";
@@ -31,7 +33,7 @@ interface Report {
   reportedAvatar?: string;
   reason: string;
   type: "post" | "user";
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "finished";
   createdAt: string;
   updatedAt: string;
 }
@@ -71,19 +73,21 @@ const ReportTable: React.FC = () => {
         );
 
         if (res.data.isSuccess) {
-            const mappedReports: Report[] = res.data.data.map((item: any) => {
+          const mappedReports: Report[] = res.data.data
+            .filter((item: any) => item.type !== "message") // BỎ MESSAGE Ở ĐÂY
+            .map((item: any) => {
               let reportedContent = "";
               let reportedAvatar = "";
-          
+
               if (item.type === "post") {
-                reportedContent = item.reported?.content || "[Bài đăng đã bị xoá]";
+                reportedContent =
+                  item.reported?.content || "[Bài đăng đã bị xoá]";
               } else if (item.type === "user") {
-                reportedContent = item.reported?.username || "[Người dùng đã bị xoá]";
+                reportedContent =
+                  item.reported?.username || "[Người dùng đã bị xoá]";
                 reportedAvatar = item.reported?.avatar || "";
-              } else if (item.type === "message") {
-                reportedContent = item.reported?.content || "[Tin nhắn đã bị xoá]";
               }
-          
+
               return {
                 id: item.id,
                 reporterName: item.reporter?.username || "Ẩn danh",
@@ -98,9 +102,9 @@ const ReportTable: React.FC = () => {
                 updatedAt: item.updatedAt,
               };
             });
-          
-            setReports(mappedReports);
-          } else {
+
+          setReports(mappedReports);
+        } else {
           setError(res.data.message || "Lỗi không xác định");
         }
       } catch (err) {
@@ -114,13 +118,10 @@ const ReportTable: React.FC = () => {
     fetchReports();
   }, []);
 
-  const getColumnsByType = (
-    type: "post" | "user" | "message"
-  ): GridColDef[] => {
+  const getColumnsByType = (type: "post" | "user"): GridColDef[] => {
     const reportedHeaderNameMap = {
       post: "Bài viết bị báo cáo",
       user: "Người dùng bị báo cáo",
-      message: "Tin nhắn bị báo cáo",
     };
 
     return [
@@ -129,7 +130,7 @@ const ReportTable: React.FC = () => {
       { field: "reporterName", headerName: "Người báo cáo", width: 150 },
       {
         field: "reportedContent",
-        headerName: reportedHeaderNameMap[type] || "Nội dung bị báo cáo",
+        headerName: reportedHeaderNameMap[type],
         flex: 1,
         minWidth: 200,
       },
@@ -139,19 +140,9 @@ const ReportTable: React.FC = () => {
         headerName: "Trạng thái",
         width: 120,
         renderCell: (params: GridRenderCellParams) => {
-          const value = params.value;
-          const color =
-            value === "pending"
-              ? "warning.light"
-              : value === "approved"
-              ? "success.light"
-              : "error.light";
           const label =
-            value === "pending"
-              ? "Chờ duyệt"
-              : value === "approved"
-              ? "Đã duyệt"
-              : "Từ chối";
+            params.value === "pending" ? "Chờ duyệt" : "Đã duyệt";
+
           return (
             <Box
               component="span"
@@ -160,7 +151,7 @@ const ReportTable: React.FC = () => {
                 py: 0.5,
                 borderRadius: 1,
                 backgroundColor:
-                  params.value === "active" ? "success.light" : "warning.light",
+                  params.value === "finished" ? "success.light" : "warning.light",
                 color: "white",
                 fontSize: "0.875rem",
               }}
@@ -176,8 +167,7 @@ const ReportTable: React.FC = () => {
         flex: 1,
         minWidth: 150,
         renderCell: (params: GridRenderCellParams<Report>) => {
-          const createdAt = params.row.createdAt;
-          const date = new Date(createdAt);
+          const date = new Date(params.row.createdAt);
           const formattedDate = date.toLocaleString("vi-VN", {
             year: "numeric",
             month: "long",
@@ -191,21 +181,95 @@ const ReportTable: React.FC = () => {
         },
       },
       {
-        field: "action",
+        field: "actions",
         headerName: "Hành động",
-        width: 120,
         sortable: false,
-        renderCell: (params: GridRenderCellParams) => (
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            color="primary"
-            onClick={() => handleOpenDialog(params.row)}
-          >
-            <VisibilityIcon fontSize={isMobile ? "small" : "medium"} />
-          </IconButton>
+        width: 120,
+        renderCell: (params: GridRenderCellParams<Report>) => (
+          <Box>
+            <IconButton
+              size={isMobile ? "small" : "medium"}
+              color="primary"
+              onClick={() => handleOpenDialog(params.row)}
+            >
+              <VisibilityIcon fontSize={isMobile ? "small" : "medium"} />
+            </IconButton>
+            {params.row.type === "post" && (
+              <IconButton
+                size={isMobile ? "small" : "medium"}
+                color="error"
+                onClick={() =>
+                  handlePostStatusChange(params.row.id, params.row.status)
+                }
+              >
+                {params.row.status === "pending" ? (
+                  <LockOutlineIcon fontSize={isMobile ? "small" : "medium"} />
+                ) : (
+                  <LockOpenIcon fontSize={isMobile ? "small" : "medium"} />
+                )}
+              </IconButton>
+            )}
+          </Box>
         ),
       },
     ];
+  };
+
+  const resolvePost = async (postId: number, action: "hide" | "unhide") => {
+    const confirmMessage =
+      action === "hide"
+        ? "Bạn có chắc chắn muốn ẩn bài viết này không?"
+        : "Bạn có chắc chắn muốn hiển thị lại bài viết này không?";
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) throw new Error("Token không hợp lệ");
+
+      const response = await axiosInstance.put(
+        `https://api-linkup.id.vn/api/report/resolvePost/${postId}`,
+        { action },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 200) {
+        const message =
+          action === "hide"
+            ? "Bài viết đã được ẩn thành công"
+            : "Bài viết đã được hiển thị lại thành công";
+
+        setReports((prev) =>
+          prev.map((r) =>
+            r.id === postId ? { ...r, status: action === "hide" ? "finished" : "pending" } : r
+          )
+        );
+
+        setSnackbar({ open: true, message, severity: "success" });
+      } else {
+        throw new Error("Không thể cập nhật bài viết");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gọi API resolvePost:", error);
+      setSnackbar({
+        open: true,
+        message: "Đã xảy ra lỗi khi cập nhật bài viết",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePostStatusChange = async (
+    postId: number,
+    currentStatus: string
+  ) => {
+    const action = currentStatus === "pending" ? "hide" : "unhide";
+    await resolvePost(postId, action);
   };
 
   const handleCloseSnackbar = () => {
@@ -246,7 +310,6 @@ const ReportTable: React.FC = () => {
       >
         <Tab label="Báo cáo bài viết" value="post" />
         <Tab label="Báo cáo người dùng" value="user" />
-        <Tab label="Báo cáo tin nhắn" value="message" />
       </Tabs>
 
       {loading ? (
@@ -268,7 +331,7 @@ const ReportTable: React.FC = () => {
         <Paper sx={{ height: { xs: 400, sm: 500 }, width: "100%" }}>
           <DataGrid
             rows={filteredReports}
-            columns={getColumnsByType(tabValue)} // sửa ở đây
+            columns={getColumnsByType(tabValue)}
             initialState={{
               pagination: {
                 paginationModel: { page: 0, pageSize: isMobile ? 5 : 10 },
@@ -310,12 +373,8 @@ const ReportTable: React.FC = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
+
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Chi tiết Báo cáo</DialogTitle>
         <DialogContent dividers sx={{ p: 3 }}>
           {currentReport && (
@@ -331,43 +390,17 @@ const ReportTable: React.FC = () => {
                 <strong>Trạng thái:</strong>{" "}
                 {currentReport.status === "pending"
                   ? "Chờ duyệt"
-                  : currentReport.status === "approved"
-                  ? "Đã duyệt"
-                  : "Từ chối"}
+                  : "Đã duyệt"}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
                 <strong>Ngày tạo:</strong>{" "}
                 {new Date(currentReport.createdAt).toLocaleString("vi-VN")}
               </Typography>
-
-              <Box mt={2}>
-                <Typography variant="h6" gutterBottom>
-                  Người báo cáo
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <Avatar src={currentReport.reporterAvatar} sx={{ mr: 2 }} />
-                  <Typography>{currentReport.reporterName}</Typography>
-                </Box>
-              </Box>
-
-              <Box mt={2}>
-                <Typography variant="h6" gutterBottom>
-                  {currentReport.type === "post"
-                    ? "Bài đăng bị báo cáo"
-                    : "Người dùng bị báo cáo"}
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  {currentReport.reportedAvatar && (
-                    <Avatar src={currentReport.reportedAvatar} sx={{ mr: 2 }} />
-                  )}
-                  <Typography>{currentReport.reportedContent}</Typography>
-                </Box>
-              </Box>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Đóng</Button>
+          <IconButton onClick={handleCloseDialog}>Đóng</IconButton>
         </DialogActions>
       </Dialog>
     </Box>
